@@ -20,7 +20,7 @@ read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
   mutate(Survey = as.ordered(Survey), Wet_mg = Wet_g * 1000, Treatment = case_when(startsWith(Treatment, "G") == T ~ "SG",
                                                       startsWith(Treatment, "O") == T ~ "OY",
                                                       startsWith(Treatment, "C") == T ~ "CB")) %>%
-  ggplot(aes(x = Treatment, y = Wet_g, fill = Survey)) +
+  ggplot(aes(x = Treatment, y = Wet_g)) +
   geom_boxplot(outlier.shape = NA, position = position_dodge(1)) +
   geom_point(position = position_dodge(1)) +
   geom_vline(xintercept = c(1.5, 2.5, 3.59)) +
@@ -38,4 +38,15 @@ read.csv("D:/Projects/Blocks/Data/Epiphytes.csv") %>%
   geom_point() +
   facet_wrap(~Site) +
   theme_classic()
-   
+
+## Macroalgae
+
+read.csv("D:/Projects/Blocks/Data/Macroalgae.csv") %>%
+  mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                                                                                   startsWith(Block, "O") == T ~ "OY",
+                                                                                   startsWith(Block, "C") == T ~ "CB")) %>%
+  ggplot(aes(x = Treatment, y = Dry_g)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point() +
+  facet_wrap(~Site) +
+  theme_classic()
