@@ -28,12 +28,14 @@ ggplot(Survival, aes(x = Treatment, y = Survival)) +
   facet_wrap(~Site) +
   theme_classic()
 
+#Anova
 lm.surv <- lm(data = Survival, Survival ~ Treatment + Site)
 
 plot(simulateResiduals(lm.surv))
 
 anova(lm.surv)
 
+#Post-Hoc
 em.surv <- emmeans(lm.surv, ~ Treatment * Site)
 
 pairs(em.surv)
@@ -75,12 +77,14 @@ ggplot(LAI, aes(x = Treatment, y = LAI)) +
   facet_wrap(~Site) +
   theme_classic()
 
+## Anova
 lm.lai <- lm(data = LAI, LAI ~ Treatment + Site)
 
 plot(simulateResiduals(lm.lai))
 
 anova(lm.lai)
 
+## Post-hoc
 em.lai <- emmeans(lm.lai, ~ Treatment * Site)
 
 pairs(em.lai)
@@ -88,8 +92,6 @@ pairs(em.lai)
 plot(em.lai, comparisons = T)
 
 cld(em.lai)
-
-##multcompLetters(pwpm(em.lai)) Figure out way to get good values
 
 #Canopy Height
 Height <- Morph %>%
