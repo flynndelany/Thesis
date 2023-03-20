@@ -1,4 +1,8 @@
 library(tidyverse)
+library(DHARMa)
+library(emmeans)
+library(multcomp)
+library(multcompView)
 
 Morph <- read.csv("D:/Projects/Blocks/Data/Morphometrics.csv") %>%
   mutate(ID = paste(Site, Block, Patch))
@@ -23,7 +27,29 @@ ggplot(Survival, aes(x = Treatment, y = Survival)) +
   geom_point() +
   facet_wrap(~Site) +
   theme_classic()
- 
+
+lm.surv <- lm(data = Survival, Survival ~ Treatment + Site)
+
+plot(simulateResiduals(lm.surv))
+
+anova(lm.surv)
+
+em.surv <- emmeans(lm.surv, ~ Treatment * Site)
+
+pairs(em.surv)
+
+plot(em.surv, comparisons = T)
+
+multcomp::cld(object = em.surv,
+    adjust = "Tukey",
+    Letters = letters,
+    alpha = 0.05)
+
+multcompLetters(pwpm(em.surv))
+
+multcompLetters(aov(Survival ~ Treatment + Site, data = Survival), TukeyHSD(aov(Survival ~ Treatment + Site, data = Survival)))
+
+
 #Productivity (gram or area?) (deployment time?)
 Productivity <- Morph %>%
   filter(New_mm != is.na(New_mm)) %>%
@@ -57,9 +83,23 @@ ggplot(LAI, aes(x = Treatment, y = LAI)) +
   facet_wrap(~Site) +
   theme_classic()
 
+lm.lai <- lm(data = LAI, LAI ~ Treatment + Site)
+
+plot(simulateResiduals(lm.lai))
+
+anova(lm.lai)
+
+em.lai <- emmeans(lm.lai, ~ Treatment * Site)
+
+pairs(em.lai)
+
+plot(em.lai, comparisons = T)
+
+##multcompLetters(pwpm(em.lai)) Figure out way to get good values
+
 #Canopy Height
 Height <- Morph %>%
-  filter()
+  group_by()
 
 #Biomass (Still being Weighed)
 
