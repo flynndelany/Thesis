@@ -40,15 +40,7 @@ pairs(em.surv)
 
 plot(em.surv, comparisons = T)
 
-multcomp::cld(object = em.surv,
-    adjust = "Tukey",
-    Letters = letters,
-    alpha = 0.05)
-
-multcompLetters(pwpm(em.surv))
-
-multcompLetters(aov(Survival ~ Treatment + Site, data = Survival), TukeyHSD(aov(Survival ~ Treatment + Site, data = Survival)))
-
+cld(em.surv)
 
 #Productivity (gram or area?) (deployment time?)
 Productivity <- Morph %>%
@@ -94,6 +86,8 @@ em.lai <- emmeans(lm.lai, ~ Treatment * Site)
 pairs(em.lai)
 
 plot(em.lai, comparisons = T)
+
+cld(em.lai)
 
 ##multcompLetters(pwpm(em.lai)) Figure out way to get good values
 
