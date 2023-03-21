@@ -23,6 +23,8 @@ ggplot(scores.fauna, aes(x = NMDS1, y = NMDS2)) +
   geom_point(size = 4,aes(shape = Treatment, colour = Site)) +
   theme_classic()
 
+#Alpha - Transparency - layer many with avg
+
 avg.scores.fauna <- scores.fauna %>%
   group_by(Site, Treatment) %>%
   summarise(NMDS1 = mean(NMDS1), NMDS2 = mean(NMDS2))
