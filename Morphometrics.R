@@ -1,17 +1,12 @@
-library(tidyverse)
-library(DHARMa)
-library(emmeans)
-library(multcomp)
-library(multcompView)
 
 Morph <- read.csv("D:/Projects/Blocks/Data/Morphometrics.csv") %>%
   mutate(ID = paste(Site, Block, Patch))
 
 Trans <- read.csv("D:/Projects/Blocks/Data/Transplantation.csv")
-Trans <- Trans[-c(97:100),] %>%
-  select(ID)
+Trans <- Trans[-c(97:100),]
+Trans <- Trans %>% transmute(ID)
 
-## Survival (Need to merge with Zeros)
+## Survival
 Survival <- Morph %>%
   group_by(ID, Site, Block, Patch) %>%
   summarise(Shoots = max(Sht)) %>%
@@ -95,7 +90,32 @@ cld(em.lai)
 
 #Canopy Height
 Height <- Morph %>%
-  group_by()
+  group_by(ID, Site, Block, Patch) %>%
+  summarise(Canopy = max(Total_mm)) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"))
+
+ggplot(Height, aes(x = Treatment, y = Canopy)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site) +
+  theme_classic()
+
+lm.can <- lm(data = Height, Canopy ~ Treatment + Site)
+
+plot(simulateResiduals(lm.can))
+
+anova(lm.can)
+
+## Post-hoc
+em.can <- emmeans(lm.can, ~ Treatment * Site)
+
+pairs(em.can)
+
+plot(em.can, comparisons = T)
+
+cld(em.can)
 
 #Biomass (Still being Weighed)
 

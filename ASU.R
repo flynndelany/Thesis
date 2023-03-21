@@ -1,7 +1,5 @@
-library(tidyverse)
 
 ## Wet Weight
-
 read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
 mutate(Wet_mg = Wet_g * 1000, Treatment = case_when(startsWith(Treatment, "G") == T ~ "SG",
                                                     startsWith(Treatment, "O") == T ~ "OY",
@@ -28,7 +26,6 @@ read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
   theme_classic()
 
 ## Epiphytes
-
 read.csv("D:/Projects/Blocks/Data/Epiphytes.csv") %>%
   mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                                                   startsWith(Block, "O") == T ~ "OY",
@@ -40,7 +37,6 @@ read.csv("D:/Projects/Blocks/Data/Epiphytes.csv") %>%
   theme_classic()
 
 ## Macroalgae
-
 read.csv("D:/Projects/Blocks/Data/Macroalgae.csv") %>%
   mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                                                    startsWith(Block, "O") == T ~ "OY",
