@@ -14,7 +14,7 @@ Survival <- Morph %>%
   full_join(Trans) %>%
   mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",
                                startsWith(substr(ID,4,6), "O") == T ~ "OY",
-                               startsWith(substr(ID,4,6), "C") == T ~ "CB"), 
+                              startsWith(substr(ID,4,6), "C") == T ~ "CB"), 
          Survival = case_when(is.na(Shoots) == F ~ Shoots/30,
                               is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2))
 
@@ -31,7 +31,7 @@ plot(simulateResiduals(lm.surv)) #Passes
 
 anova(lm.surv)
 
-#Post-Hoc
+#Post Hoc
 em.surv <- emmeans(lm.surv, ~ Treatment * Site)
 
 pairs(em.surv)
@@ -44,13 +44,12 @@ cld(em.surv)
 Productivity <- Morph %>%
   filter(New_mm != is.na(New_mm)) %>%
   group_by(ID, Site, Block, Patch) %>%
-  summarise(GrowthRatio = sum(New_mm)/sum(Total_mm), GrowthRate = case_when(Site == "LL" ~ sum(New_mm)/8,
+  summarise(Shoots = n_distinct(Sht), GrowthRatio = sum(New_mm)/sum(Total_mm), GrowthRate = case_when(Site == "LL" ~ sum(New_mm)/8,
                                                                             Site == "FP" ~ sum(New_mm)/9)) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB")) %>%
   distinct() %>%
-  left_join(Survival) %>%
   mutate(GrowthRate = GrowthRate/Shoots) #Growth Rate is mm/(day*sht)
 
 #Growth Rate Anova & Post Hoc
@@ -62,7 +61,7 @@ ggplot(Productivity, aes(x = Treatment, y = GrowthRate)) +
 
 lm.grate <- lm(data = Productivity, GrowthRate ~ Treatment + Site)
 
-plot(simulateResiduals(lm.grate)) #fails Levene test for homogeneity of variance
+plot(simulateResiduals(lm.grate))
 
 anova(lm.grate)
 
@@ -75,16 +74,46 @@ plot(em.grate, comparisons = T)
 cld(em.grate)
 
 ## Secondary Shoots ------------------------------------------------------------
-Primary <- Morph %>%
-  filter(is.na(Parent)) %>%
-  group_by(Site, Block) %>%
-  summarise(n_distinct(Sht))
-Primary
+Ordinal <- Morph %>%
+  dplyr::select(ID, Site, Block, Patch, Sht, Parent)%>%
+  distinct() %>%
+  mutate(Ordinalsht=0)
 
-Secondary <- Morph %>%
-  filter(!is.na(Parent)) %>%
-  group_by(Site, Block) %>%
-  summarise(n_distinct(Sht))
+for (i in Ordinal$ID) {
+  z <- Ordinal %>%
+    filter(ID == i)
+  for (j in z$Sht) {
+    x <- Ordinal %>%
+      filter(ID == i & Sht == j)
+    y <- Ordinal %>%
+      filter(ID == i & !is.na(Parent))
+    if (is.na(x$Parent)){
+      Ordinal[Ordinal$ID == i & Ordinal$Sht == j, 7] = 1 
+    }
+    else if(x$Parent %in% y$Sht){
+      Ordinal[Ordinal$ID == i & Ordinal$Sht == j, 7] = 3
+    }
+    else{
+      Ordinal[Ordinal$ID == i & Ordinal$Sht == j, 7] = 2
+    }
+  }
+}
+
+OrdinalShoots <- Ordinal %>%
+  group_by(Site, Block, Patch) %>%
+  summarise(Primary = sum(Ordinalsht == 1), Secondary = sum(Ordinalsht == 2), Tertiary = sum(Ordinalsht == 3)) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB")) %>%
+  pivot_longer(cols = c(Primary,Secondary,Tertiary), names_to = "OrdinalValue", values_to = "Count")
+OrdinalShoots
+
+ggplot(OrdinalShoots, aes(x = Treatment, y = Count)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_grid(rows = vars(Site), cols = vars(OrdinalValue)) +
+  theme_classic()
+
 ## LAI -------------------------------------------------------------------------
 LAI <- Morph %>%
   mutate(LAI = Total_mm * Width_mm, NewLAI = New_mm * Width_mm) %>%

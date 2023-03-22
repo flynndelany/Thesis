@@ -20,18 +20,13 @@ scores.fauna$Survey <- Fauna$Survey
 scores.fauna$Site <- Fauna$Site
 scores.fauna$Treatment <- Fauna$Treatment
 
-ggplot(scores.fauna, aes(x = NMDS1, y = NMDS2)) +
-  geom_point(size = 4,aes(shape = Treatment, colour = Site)) +
-  theme_classic()
-
-#Alpha - Transparency - layer many with avg
-
 avg.scores.fauna <- scores.fauna %>%
   group_by(Site, Treatment) %>%
   summarise(NMDS1 = mean(NMDS1), NMDS2 = mean(NMDS2))
 
 ggplot(adj.scores.fauna, aes(x = NMDS1, y = NMDS2)) +
   geom_point(size = 4,aes(shape = Treatment, colour = Site)) +
+  geom_point(data = scores.fauna, aes(x = NMDS1, y = NMDS2, shape = Treatment, colour = Site), alpha =.5) +
   theme_classic()
 
 #ANOSIM Test like in R 
