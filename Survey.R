@@ -1,4 +1,5 @@
-#Faunal Diversity (added mud crab to 1 & 12 for test)
+
+## Faunal Diversity (added mud crab to 1 & 12 for test) ------------------------
 
 Fauna <- read.csv("D:/Projects/Blocks/Data/SurveyFauna.csv") %>%
   mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",

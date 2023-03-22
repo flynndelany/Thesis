@@ -1,5 +1,7 @@
 
-## Wet Weight
+## Epifauna --------------------------------------------------------------------
+
+#Wet Weights
 read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
 mutate(Wet_mg = Wet_g * 1000, Treatment = case_when(startsWith(Treatment, "G") == T ~ "SG",
                                                     startsWith(Treatment, "O") == T ~ "OY",
@@ -12,7 +14,7 @@ ggplot(aes(x = Treatment, y = Wet_g, fill = Class)) +
   theme_classic() +
   labs(fill = "Group")
 
-### Just Amphipods
+#Just Amphipods
 read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
   filter(Class == "Amp") %>%
   mutate(Survey = as.ordered(Survey), Wet_mg = Wet_g * 1000, Treatment = case_when(startsWith(Treatment, "G") == T ~ "SG",
@@ -25,7 +27,8 @@ read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
   facet_wrap(~Site) +
   theme_classic()
 
-## Epiphytes
+## Epiphytes -------------------------------------------------------------------
+
 read.csv("D:/Projects/Blocks/Data/Epiphytes.csv") %>%
   mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                                                   startsWith(Block, "O") == T ~ "OY",
@@ -36,7 +39,8 @@ read.csv("D:/Projects/Blocks/Data/Epiphytes.csv") %>%
   facet_wrap(~Site) +
   theme_classic()
 
-## Macroalgae
+## Macroalgae ------------------------------------------------------------------
+
 read.csv("D:/Projects/Blocks/Data/Macroalgae.csv") %>%
   mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                                                    startsWith(Block, "O") == T ~ "OY",

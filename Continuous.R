@@ -1,7 +1,6 @@
 
+## PAR umol/(s * m^2)-----------------------------------------------------------
 surveys <- c("2022-06-20","2022-07-08","2022-07-28","2022-08-16","2022-09-08","2022-09-30")
-
-#PAR umol/(s * m^2)
 nmcals <- c("Timestamp", "UTC", "EST", "Bat_V", "Temp_C", "PAR", "AccX", "AccY", "AccZ")
 
 Light_LL_1 <- read.csv("D:/Projects/Blocks/Data/PAR/LLCat1.csv", col.names = nmcals) %>%
@@ -28,7 +27,7 @@ ggplot(Light, aes(EST, PAR)) +
   facet_wrap(~Site) +
   theme_classic()
 
-#Hobo Temp
+## Hobo Temp -------------------------------------------------------------------
 
 Temp_FP <- read.csv("D:/Projects/Blocks/HoBos/2235047.csv") %>%
   mutate(EST = as.POSIXct(DateTime, format = "%m/%d/%Y %H:%M"), Site = "FP")
@@ -44,7 +43,6 @@ ggplot(Temp, aes(EST, TempC)) +
   theme_classic()
 
 #Hours over 25C
-
 start <-as.Date(c("2022-06-20","2022-07-08","2022-07-28","2022-08-16","2022-09-08"), "%Y-%m-%d")
 end <- as.Date(c("2022-07-08","2022-07-28","2022-08-16","2022-09-08","2022-09-30"), "%Y-%m-%d")
 survey <- c(1,2,3,4,5)

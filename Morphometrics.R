@@ -6,7 +6,8 @@ Trans <- read.csv("D:/Projects/Blocks/Data/Transplantation.csv")
 Trans <- Trans[-c(97:100),]
 Trans <- Trans %>% transmute(ID)
 
-## Survival
+## Survival --------------------------------------------------------------------
+
 Survival <- Morph %>%
   group_by(ID, Site, Block, Patch) %>%
   summarise(Shoots = max(Sht)) %>%
@@ -39,7 +40,7 @@ plot(em.surv, comparisons = T)
 
 cld(em.surv)
 
-#Productivity (gram or area?) (deployment time?)
+## Productivity (gram or area?) (deployment time?) -----------------------------
 Productivity <- Morph %>%
   filter(New_mm != is.na(New_mm)) %>%
   group_by(ID, Site, Block, Patch) %>%
@@ -54,10 +55,10 @@ ggplot(Productivity, aes(x = Treatment, y = Growth)) +
   facet_wrap(~Site) +
   theme_classic()
 
-#Secondary Shoots
+## Secondary Shoots ------------------------------------------------------------
 
 
-#LAI
+## LAI -------------------------------------------------------------------------
 LAI <- Morph %>%
   mutate(LAI = Total_mm * Width_mm, NewLAI = New_mm * Width_mm) %>%
   group_by(ID, Site, Block, Patch) %>%
@@ -72,14 +73,14 @@ ggplot(LAI, aes(x = Treatment, y = LAI)) +
   facet_wrap(~Site) +
   theme_classic()
 
-## Anova
+#Anova
 lm.lai <- lm(data = LAI, LAI ~ Treatment + Site)
 
 plot(simulateResiduals(lm.lai))
 
 anova(lm.lai)
 
-## Post-hoc
+#Post-hoc
 em.lai <- emmeans(lm.lai, ~ Treatment * Site)
 
 pairs(em.lai)
@@ -88,7 +89,7 @@ plot(em.lai, comparisons = T)
 
 cld(em.lai)
 
-#Canopy Height
+## Canopy Height ---------------------------------------------------------------
 Height <- Morph %>%
   group_by(ID, Site, Block, Patch) %>%
   summarise(Canopy = max(Total_mm)) %>%
@@ -102,13 +103,14 @@ ggplot(Height, aes(x = Treatment, y = Canopy)) +
   facet_wrap(~Site) +
   theme_classic()
 
+#Anova
 lm.can <- lm(data = Height, Canopy ~ Treatment + Site)
 
 plot(simulateResiduals(lm.can))
 
 anova(lm.can)
 
-## Post-hoc
+#Post-hoc
 em.can <- emmeans(lm.can, ~ Treatment * Site)
 
 pairs(em.can)
@@ -117,7 +119,7 @@ plot(em.can, comparisons = T)
 
 cld(em.can)
 
-#Biomass (Still being Weighed)
+## Biomass (Still being Weighed) -----------------------------------------------
 
 
 
