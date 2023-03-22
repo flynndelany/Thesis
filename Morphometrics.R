@@ -27,7 +27,7 @@ ggplot(Survival, aes(x = Treatment, y = Survival)) +
 #Anova
 lm.surv <- lm(data = Survival, Survival ~ Treatment + Site)
 
-plot(simulateResiduals(lm.surv))
+plot(simulateResiduals(lm.surv)) #Passes
 
 anova(lm.surv)
 
@@ -40,24 +40,51 @@ plot(em.surv, comparisons = T)
 
 cld(em.surv)
 
-## Productivity (gram or area?) (deployment time?) -----------------------------
+## Productivity (gram or area) -------------------------------------------------
 Productivity <- Morph %>%
   filter(New_mm != is.na(New_mm)) %>%
   group_by(ID, Site, Block, Patch) %>%
-  summarise(Growth = sum(New_mm)/sum(Total_mm)) %>%
+  summarise(GrowthRatio = sum(New_mm)/sum(Total_mm), GrowthRate = case_when(Site == "LL" ~ sum(New_mm)/8,
+                                                                            Site == "FP" ~ sum(New_mm)/9)) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
-                               startsWith(Block, "C") == T ~ "CB"))
+                               startsWith(Block, "C") == T ~ "CB")) %>%
+  distinct() %>%
+  left_join(Survival) %>%
+  mutate(GrowthRate = GrowthRate/Shoots) #Growth Rate is mm/(day*sht)
 
-ggplot(Productivity, aes(x = Treatment, y = Growth)) +
+#Growth Rate Anova & Post Hoc
+ggplot(Productivity, aes(x = Treatment, y = GrowthRate)) +
   geom_boxplot() +
   geom_point() +
   facet_wrap(~Site) +
   theme_classic()
 
+lm.grate <- lm(data = Productivity, GrowthRate ~ Treatment + Site)
+
+plot(simulateResiduals(lm.grate)) #fails Levene test for homogeneity of variance
+
+anova(lm.grate)
+
+em.grate <- emmeans(lm.grate, ~ Treatment * Site)
+
+pairs(em.grate)
+
+plot(em.grate, comparisons = T)
+
+cld(em.grate)
+
 ## Secondary Shoots ------------------------------------------------------------
+Primary <- Morph %>%
+  filter(is.na(Parent)) %>%
+  group_by(Site, Block) %>%
+  summarise(n_distinct(Sht))
+Primary
 
-
+Secondary <- Morph %>%
+  filter(!is.na(Parent)) %>%
+  group_by(Site, Block) %>%
+  summarise(n_distinct(Sht))
 ## LAI -------------------------------------------------------------------------
 LAI <- Morph %>%
   mutate(LAI = Total_mm * Width_mm, NewLAI = New_mm * Width_mm) %>%
@@ -76,8 +103,8 @@ ggplot(LAI, aes(x = Treatment, y = LAI)) +
 #Anova
 lm.lai <- lm(data = LAI, LAI ~ Treatment + Site)
 
-plot(simulateResiduals(lm.lai))
-
+plot(simulateResiduals(lm.lai)) #Passes
+ 
 anova(lm.lai)
 
 #Post-hoc
@@ -106,7 +133,7 @@ ggplot(Height, aes(x = Treatment, y = Canopy)) +
 #Anova
 lm.can <- lm(data = Height, Canopy ~ Treatment + Site)
 
-plot(simulateResiduals(lm.can))
+plot(simulateResiduals(lm.can)) #Passes
 
 anova(lm.can)
 
