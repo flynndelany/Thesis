@@ -15,17 +15,33 @@ ggplot(aes(x = Treatment, y = Wet_g, fill = Class)) +
   labs(fill = "Group")
 
 #Just Amphipods
-read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
+Wet_Amph <- read.csv("D:/Projects/Blocks/Data/Epifauna_Wet.csv") %>%
   filter(Class == "Amp") %>%
   mutate(Survey = as.ordered(Survey), Wet_mg = Wet_g * 1000, Treatment = case_when(startsWith(Treatment, "G") == T ~ "SG",
                                                       startsWith(Treatment, "O") == T ~ "OY",
-                                                      startsWith(Treatment, "C") == T ~ "CB")) %>%
-  ggplot(aes(x = Treatment, y = Wet_g)) +
+                                                      startsWith(Treatment, "C") == T ~ "CB"))
+
+ggplot(Wet_Amph, aes(x = Treatment, y = Wet_g)) +
   geom_boxplot(outlier.shape = NA, position = position_dodge(1)) +
   geom_point(position = position_dodge(1)) +
-  geom_vline(xintercept = c(1.5, 2.5, 3.59)) +
   facet_wrap(~Site) +
   theme_classic()
+
+#Anova
+lm.amph <- lm(data = Wet_Amph, Wet_g ~ Treatment + Site)
+
+plot(simulateResiduals(lm.amph)) #Passes
+
+anova(lm.amph)
+
+#Post Hoc
+em.amph <- emmeans(lm.amph, ~ Treatment * Site)
+
+pairs(em.amph)
+
+plot(em.amph, comparisons = T)
+
+cld(em.amph)
 
 ## Epiphytes -------------------------------------------------------------------
 
