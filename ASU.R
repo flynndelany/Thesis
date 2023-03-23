@@ -61,7 +61,7 @@ read.csv("D:/Projects/Blocks/Data/Macroalgae.csv") %>%
   mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                                                    startsWith(Block, "O") == T ~ "OY",
                                                                                    startsWith(Block, "C") == T ~ "CB")) %>%
-  ggplot(aes(x = Treatment, y = Dry_g)) +
+  ggplot(aes(x = Treatment, y = Dry_g, fill = Survey)) +
   geom_boxplot(outlier.shape = NA) +
   geom_point() +
   facet_wrap(~Site) +

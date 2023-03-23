@@ -27,6 +27,13 @@ ggplot(Light, aes(EST, PAR)) +
   facet_wrap(~Site) +
   theme_classic()
 
+DailyHsat <- Light %>%
+  group_by(Site, Survey) %>%
+  summarise(Over25 = sum(TempC>25))
+Over25
+
+#Hsat - Saturation limit 100 - 300
+
 ## Hobo Temp -------------------------------------------------------------------
 
 Temp_FP <- read.csv("D:/Projects/Blocks/HoBos/2235047.csv") %>%
