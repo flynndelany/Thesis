@@ -45,7 +45,7 @@ cld(em.amph)
 
 ## Epiphytes -------------------------------------------------------------------
 
-read.csv("D:/Projects/Blocks/Data/Epiphytes.csv") %>%
+read.csv("D:/Projects/Blocks/Data/EpiphytesASU.csv") %>%
   mutate(Survey = as.ordered(Survey), Dry_mg = Dry_g * 1000, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                                                   startsWith(Block, "O") == T ~ "OY",
                                                                                   startsWith(Block, "C") == T ~ "CB")) %>%

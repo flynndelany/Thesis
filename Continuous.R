@@ -27,10 +27,34 @@ ggplot(Light, aes(EST, PAR)) +
   facet_wrap(~Site) +
   theme_classic()
 
-DailyHsat <- Light %>%
+start <-as.Date(c("2022-06-20","2022-07-08","2022-07-28", "2022-08-10","2022-08-16","2022-09-08"), "%Y-%m-%d")
+end <- as.Date(c("2022-07-08","2022-07-28","2022-07-29", "2022-08-16","2022-09-08","2022-09-30"), "%Y-%m-%d")
+survey <- c(1,2,3,3,4,5)
+Survey <- data.frame(survey, start, end)
+Survey
+
+adj_light <- data.frame(matrix(ncol = 11, nrow = 0))
+colnames(adj_light) <- colnames(Light)
+
+for (i in 1:6) {
+  x <- subset(Light, EST >= Survey$start[i] & EST <= Survey$end[i]) %>%
+    mutate(Survey = Survey$survey[i])
+  
+  adj_light <- rbind(adj_light, x)
+}
+
+DailyHsat <- adj_light %>%
+  mutate(Date = as.Date(EST, format = "%Y-%m-%d")) %>%
+  group_by(Site, Survey, Date) %>%
+  summarise(Hsat = sum(PAR>100)/12) %>% ungroup() %>%
   group_by(Site, Survey) %>%
-  summarise(Over25 = sum(TempC>25))
-Over25
+  summarise(AvgHsat = mean(Hsat))
+  
+ggplot(DailyHsat, aes(Survey, AvgHsat, fill = Site)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") + 
+  scale_fill_grey() +
+  theme_classic() +
+  ylab("Hours Over 25C")
 
 #Hsat - Saturation limit 100 - 300
 
@@ -68,7 +92,7 @@ for (i in Survey$survey) {
 
 Over25 <- adj_Temp %>%
   group_by(Site, Survey) %>%
-  summarise(Over25 = sum(TempC>25))
+  summarise(Over25 = sum(TempC>25)/4)
 Over25
 
 ggplot(Over25, aes(Survey, Over25, fill = Site)) +
