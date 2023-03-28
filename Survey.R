@@ -1,5 +1,5 @@
 
-## Faunal Diversity (added mud crab to 1 & 12 for test) ------------------------
+## Faunal Diversity (added mud crab to 1 & 12 for test & Misc of all 1s) ------------------------
 
 Fauna <- read.csv("D:/Projects/Blocks/Data/SurveyFauna.csv") %>%
   mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",
@@ -32,3 +32,18 @@ ggplot(adj.scores.fauna, aes(x = NMDS1, y = NMDS2)) +
 #ANOSIM Test like in R 
 anosim(mtrx.fauna, Fauna$Site, permutations = 9999, distance = "bray")
 anosim(mtrx.fauna, Fauna$Treatment, permutations = 9999, distance = "bray")
+
+#Simpsons Index - Almost got it (too many 1s for the SG Treatment)
+FaunaDiversity <- 1-simpson.unb(mtrx.fauna)#Simpsons Compliment b/c Simpson D is lower with more diversity
+
+
+Fauna.simp <- Fauna %>%
+  mutate(CompSimpD = FaunaDiversity) %>%
+  dplyr::select(Site, Treatment, CompSimpD)
+
+ggplot(Fauna.simp, aes(x = Treatment, y = CompSimpD)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site) +
+  theme_classic()
+

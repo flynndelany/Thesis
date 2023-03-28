@@ -6,6 +6,12 @@ Trans <- read.csv("D:/Projects/Blocks/Data/Transplantation.csv")
 Trans <- Trans[-c(97:100),]
 Trans <- Trans %>% transmute(ID)
 
+Morph2021 <- read.csv("D:/Projects/Blocks/Data/Morphometrics2021.csv") %>%
+  mutate(ID = paste(Site, Block, Patch))
+Trans2021 <- read.csv("D:/Projects/Blocks/Data/Transplantation2021.csv") %>%
+  mutate(ID = paste(Site, Block, Patch)) %>%
+  dplyr::select(ID)
+
 ## Survival --------------------------------------------------------------------
 
 Survival <- Morph %>%
@@ -18,7 +24,23 @@ Survival <- Morph %>%
          Survival = case_when(is.na(Shoots) == F ~ Shoots/30,
                               is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2))
 
+Survival2021 <- Morph2021 %>%
+  group_by(ID, Site, Block, Patch) %>%
+  summarise(Shoots = max(Shoot)) %>%
+  full_join(Trans2021) %>%
+  mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",
+                               startsWith(substr(ID,4,6), "O") == T ~ "OY",
+                               startsWith(substr(ID,4,6), "C") == T ~ "CB"), 
+         Survival = case_when(is.na(Shoots) == F ~ Shoots/30,
+                              is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2))
+
 ggplot(Survival, aes(x = Treatment, y = Survival)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site) +
+  theme_classic()
+
+ggplot(Survival2021, aes(x = Treatment, y = Survival)) +
   geom_boxplot() +
   geom_point() +
   facet_wrap(~Site) +
@@ -29,7 +51,7 @@ lm.surv <- lm(data = Survival, Survival ~ Treatment + Site)
 
 plot(simulateResiduals(lm.surv)) #Passes
 
-anova(lm.surv)
+Anova(lm.surv, type = 3)
 
 #Post Hoc
 em.surv <- emmeans(lm.surv, ~ Treatment * Site)
