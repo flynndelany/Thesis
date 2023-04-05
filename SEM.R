@@ -79,8 +79,8 @@ ll.sem <- psem(
   lmer(cover.div ~ Treatment + (1|Survey), data = ll.sem.data),
   lmer(drift_mg_day ~ Treatment + (1|Survey), data = ll.sem.data),
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = ll.sem.data),
-  lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + (1|Survey), data = ll.sem.data), 
-  lmer(Epiphyte_mg_day ~ Grazer_mg_day + (1|Survey), data = ll.sem.data), 
+  lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + (1|Survey), data = ll.sem.data), 
+  lmer(Epiphyte_mg_day ~ Grazer_mg_day + Treatment + (1|Survey), data = ll.sem.data), 
   lmer(sg_survival ~ drift_mg_day + fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = ll.sem.data),
   data = ll.sem.data
 )
