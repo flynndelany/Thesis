@@ -27,6 +27,19 @@ ggplot(Light, aes(EST, PAR)) +
   facet_wrap(~Site) +
   theme_classic()
 
+AvgDailyLight <- Light %>%
+  mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60)) %>%
+  group_by(Site, HOD) %>%
+  summarise(DailyPAR = mean(PAR)) %>%
+  ungroup()
+
+ggplot(AvgDailyLight, aes(HOD, DailyPAR)) +
+  geom_line() +
+  geom_hline(yintercept = 100, linetype = "dashed") +
+  facet_wrap(~Site) +
+  theme_classic() +
+  labs(x = "Hour of the Day", y = expression(paste("PAR (", mu, "mol s"^-1, " m"^-2, ")")))
+
 start <-as.Date(c("2022-06-20","2022-07-08","2022-07-28", "2022-08-10","2022-08-16","2022-09-08"), "%Y-%m-%d")
 end <- as.Date(c("2022-07-08","2022-07-28","2022-07-29", "2022-08-16","2022-09-08","2022-09-30"), "%Y-%m-%d")
 survey <- c(1,2,3,3,4,5)
@@ -45,16 +58,17 @@ for (i in 1:6) {
 
 DailyHsat <- adj_light %>%
   mutate(Date = as.Date(EST, format = "%Y-%m-%d")) %>%
-  group_by(Site, Survey, Date) %>%
-  summarise(Hsat = sum(PAR>100)/12) %>% ungroup() %>%
-  group_by(Site, Survey) %>%
-  summarise(AvgHsat = mean(Hsat))
+  mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60)) %>%
+  group_by(Site, Survey, HOD) %>%
+  summarise(DailyPAR = mean(PAR)) %>%
+  ungroup(HOD) %>%
+  summarise(AvgHsat = sum(DailyPAR>100)/4)
   
 ggplot(DailyHsat, aes(Survey, AvgHsat, fill = Site)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") + 
   scale_fill_grey() +
   theme_classic() +
-  ylab("Hours Over 25C")
+  ylab("Hsat (h)")
 
 #Hsat - Saturation limit 100 - 300
 
