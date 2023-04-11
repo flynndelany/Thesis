@@ -36,6 +36,7 @@ AvgDailyLight <- Light %>%
 ggplot(AvgDailyLight, aes(HOD, DailyPAR)) +
   geom_line() +
   geom_hline(yintercept = 100, linetype = "dashed") +
+  geom_hline(yintercept = 300, linetype = "dashed", color = "darkred") +
   facet_wrap(~Site) +
   theme_classic() +
   labs(x = "Hour of the Day", y = expression(paste("PAR (", mu, "mol s"^-1, " m"^-2, ")")))
@@ -62,7 +63,7 @@ DailyHsat <- adj_light %>%
   group_by(Site, Survey, HOD) %>%
   summarise(DailyPAR = mean(PAR)) %>%
   ungroup(HOD) %>%
-  summarise(AvgHsat = sum(DailyPAR>100)/4)
+  summarise(AvgHsat = sum(DailyPAR>300)/4)
   
 ggplot(DailyHsat, aes(Survey, AvgHsat, fill = Site)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") + 
