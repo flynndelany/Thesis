@@ -12,7 +12,7 @@ Trans2021 <- read.csv("D:/Projects/Blocks/Data/Transplantation2021.csv") %>%
   mutate(ID = paste(Site, Block, Patch)) %>%
   dplyr::select(ID)
 
-## Survival --------------------------------------------------------------------
+## Survival (Graphs Complete) --------------------------------------------------------------------
 
 Survival <- Morph %>%
   group_by(ID, Site, Block, Patch) %>%
@@ -102,7 +102,7 @@ plot(em.surv21, comparisons = T)
 
 cld(em.surv21)
 
-## Productivity (mm^2 day^-1 Shoot^-1) -------------------------------------------------
+## Productivity (Graphs Complete) -------------------------------------------------
 Productivity <- Morph %>%
   filter(New_mm != is.na(New_mm)) %>%
   mutate(New_lai = New_mm*Width_mm) %>%
@@ -185,7 +185,7 @@ plot(em.grate21, comparisons = T)
 
 cld(em.grate21)
 
-## Secondary Shoots ------------------------------------------------------------
+## Secondary Shoots (Graphs Complete) ------------------------------------------------------------
 Ordinal <- Morph %>%
   dplyr::select(ID, Site, Block, Patch, Sht, Parent)%>%
   distinct() %>%
@@ -235,8 +235,16 @@ Branching <- OrdinalShoots %>%
 ggplot(Branching, aes(x = Treatment, y = Branch)) +
   geom_boxplot() +
   geom_point() +
-  facet_wrap(~Site) +
-  theme_classic()
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab("Proportion of Shoots as Lateral Branches") + ylim(0,1)
 
 lm.branch <- lm(data = Branching, Branch ~ Site * Treatment)
 
@@ -301,8 +309,17 @@ Branching21 <- OrdinalShoots21 %>%
 ggplot(Branching21, aes(x = Treatment, y = Branch)) +
   geom_boxplot() +
   geom_point() +
-  facet_wrap(~Site) +
-  theme_classic()
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab("Proportion of Shoots as Lateral Branches") +
+  ylim(0,1)
 
 lm.branch21 <- lm(data = Branching21, Branch ~ Site * Treatment)
 
@@ -318,27 +335,37 @@ plot(em.branch21, comparisons = T)
 
 cld(em.branch21)
 
-## LAI -------------------------------------------------------------------------
+## LAI (Graphs Complete) -------------------------------------------------------------------------
 LAI <- Morph %>%
   mutate(LAI = Total_mm * Width_mm, NewLAI = New_mm * Width_mm) %>%
-  group_by(ID, Site, Block, Patch) %>%
+  group_by(ID, Site, Block, Patch, Sht) %>%
   summarise(LAI = sum(LAI), NewLAI = sum(NewLAI)) %>%
+  ungroup(Sht) %>%
+  summarise(avgLAI = mean(LAI)/100, LAI = sum(LAI)/100) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB"))
 
-ggplot(LAI, aes(x = Treatment, y = LAI)) +
+ggplot(LAI, aes(x = Treatment, y = avgLAI)) +
   geom_boxplot() +
   geom_point() +
-  facet_wrap(~Site) +
-  theme_classic()
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Leaf Area (cm"^2," shoot"^-1, ")"))) + ylim(0,25)
 
 #Anova
-lm.lai <- lm(data = LAI, LAI ~ Treatment + Site)
+lm.lai <- lm(data = LAI, avgLAI ~ Treatment * Site)
 
 plot(simulateResiduals(lm.lai)) #Passes
  
-anova(lm.lai)
+Anova(lm.lai, Type = 2)
 
 #Post-hoc
 em.lai <- emmeans(lm.lai, ~ Treatment * Site)
@@ -349,26 +376,76 @@ plot(em.lai, comparisons = T)
 
 cld(em.lai)
 
-## Canopy Height ---------------------------------------------------------------
-Height <- Morph %>%
-  group_by(ID, Site, Block, Patch) %>%
-  summarise(Canopy = max(Total_mm)) %>%
+LAI21 <- Morph2021 %>%
+  mutate(LAI = Total_mm * Width_mm, NewLAI = New_mm * Width_mm) %>%
+  group_by(ID, Site, Block, Patch, Shoot) %>%
+  summarise(LAI = sum(LAI), NewLAI = sum(NewLAI)) %>%
+  ungroup(Shoot) %>%
+  summarise(avgLAI = mean(LAI)/100, LAI = sum(LAI)/100) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB"))
 
-ggplot(Height, aes(x = Treatment, y = Canopy)) +
+ggplot(LAI21, aes(x = Treatment, y = avgLAI)) +
   geom_boxplot() +
   geom_point() +
-  facet_wrap(~Site) +
-  theme_classic()
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Leaf Area (cm"^2," shoot"^-1, ")"))) + ylim(0,25)
 
 #Anova
-lm.can <- lm(data = Height, Canopy ~ Treatment + Site)
+lm.lai21 <- lm(data = LAI21, avgLAI ~ Treatment * Site)
+
+plot(simulateResiduals(lm.lai21)) #Passes
+
+Anova(lm.lai21, type = 2)
+
+#Post-hoc
+em.lai21 <- emmeans(lm.lai21, ~ Treatment * Site)
+
+pairs(em.lai21)
+
+plot(em.lai21, comparisons = T)
+
+cld(em.lai21)
+
+## Canopy Height (Graphs Complete) ---------------------------------------------------------------
+Height <- Morph %>%
+  group_by(ID, Site, Block, Patch, Sht) %>%
+  summarise(Canopy = max(Total_mm)) %>%
+  ungroup(Sht)%>%
+  summarise(avgCanopy = mean(Canopy))%>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"))
+
+ggplot(Height, aes(x = Treatment, y = avgCanopy)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Canopy Height (mm shoot"^-1, ")"))) + ylim(0,350)
+
+#Anova
+lm.can <- lm(data = Height, avgCanopy ~ Treatment * Site)
 
 plot(simulateResiduals(lm.can)) #Passes
 
-anova(lm.can)
+Anova(lm.can, type = 2)
 
 #Post-hoc
 em.can <- emmeans(lm.can, ~ Treatment * Site)
@@ -379,11 +456,204 @@ plot(em.can, comparisons = T)
 
 cld(em.can)
 
-## Biomass ---------------------------------------------------------------------
+Height21 <- Morph2021 %>%
+  group_by(ID, Site, Block, Patch, Shoot) %>%
+  summarise(Canopy = max(Total_mm)) %>%
+  ungroup(Shoot)%>%
+  summarise(avgCanopy = mean(Canopy))%>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"))
+
+ggplot(Height21, aes(x = Treatment, y = avgCanopy)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Canopy Height (mm shoot"^-1, ")"))) + ylim(0,350)
+
+#Anova
+lm.can21 <- lm(data = Height21, avgCanopy ~ Treatment * Site)
+
+plot(simulateResiduals(lm.can21)) #Passes
+
+Anova(lm.can21, type = 2)
+
+#Post-hoc
+em.can21 <- emmeans(lm.can21, ~ Treatment * Site)
+
+pairs(em.can21)
+
+plot(em.can21, comparisons = T)
+
+cld(em.can21)
+
+## Above Biomass (Graphs Complete) ---------------------------------------------------------------
+AbovetoAdd <- read.csv("D:/Projects/Blocks/Data/BM_AboveLost.csv") %>%
+  left_join(Survival) %>%
+  dplyr::select(Site = SITE, Block = TREATMENT, Patch = PATCH, Above = ABOVE_g, Shoots ) %>%
+  mutate(Above = Above/Shoots) %>%
+  dplyr::select(-Shoots)
+
+Above_bm <- read.csv("D:/Projects/Blocks/Data/BM_Above.csv") %>%
+  group_by(Site, Block, Patch, Sht) %>%
+  summarise(Above = sum(Above_g)) %>%
+  ungroup(Sht) %>%
+  summarise(Above = mean(Above)) %>%
+  rbind(AbovetoAdd) %>%
+  group_by(Site, Block, Patch) %>%
+  summarise(Above = sum(Above)*1000) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"))
 
 
 
-## Epiphytes -------------------------------------------------------------------
+ggplot(Above_bm, aes(Treatment, Above)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Aboveground Biomass (mg shoot"^-1, ")")))
 
+lm.above <- lm(Above ~ Site * Treatment, Above_bm)
 
+plot(simulateResiduals(lm.above))
 
+Anova(lm.above, type = 2)
+
+## Below Biomass (Graphs Complete) ---------------------------------------------------------------
+Below_bm <- read.csv("D:/Projects/Blocks/Data/BM_Below.csv") %>%
+  dplyr::select(ID, Below) %>%
+  left_join(Survival) %>%
+  mutate(Below = Below/Shoots*1000) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB")) %>%
+  arrange(ID)
+
+ggplot(Below_bm, aes(Treatment, Below)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Belowground Biomass (mg shoot"^-1, ")"))) + ylim(0,800)
+
+lm.below <- lm(Below ~ Site * Treatment, Below_bm)
+
+plot(simulateResiduals(lm.below))
+
+Anova(lm.below, type = 2)
+
+em.above <- emmeans(lm.above, ~ Treatment * Site)
+
+pairs(em.above)
+
+plot(em.above, comparisons = T)
+
+cld(em.above)
+
+## Epiphytes (Graphs Complete) -------------------------------------------------------------------
+
+epiphyte_grass <- read.csv("D:/Projects/Blocks/Data/EpiphytesGrass.csv") %>% 
+  dplyr::select(Site = SITE, Block = TREATMENT, Patch = PATCH, Epiphyte_g = Dry_g) %>%
+  left_join(Survival) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"),
+         Epiphyte = Epiphyte_g/Shoots*1000) %>%
+  left_join(LAI) %>%
+  mutate(Epiphyte = Epiphyte/LAI)
+
+ggplot(epiphyte_grass, aes(Treatment, Epiphyte)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Epiphytic Load (mg cm"^-2," shoot"^-1, ")"))) +
+  ylim(0,3)
+
+#Anova
+lm.phyte <- lm(data = epiphyte_grass, Epiphyte ~ Treatment * Site)
+
+plot(simulateResiduals(lm.phyte)) #Passes
+
+Anova(lm.phyte, type = 2)
+
+#Post-hoc
+em.phyte <- emmeans(lm.phyte, ~ Treatment * Site)
+
+pairs(em.phyte)
+
+plot(em.phyte, comparisons = T)
+
+cld(em.phyte)
+
+epiphyte_grass21 <- read.csv("D:/Projects/Blocks/Data/EpiphytesGrass2021.csv") %>%
+  filter(Block != "Nat") %>%
+  left_join(Survival2021) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"),
+         Epiphyte_g = Tin_Epiphyte_g - Tin_g,
+         Epiphyte = Epiphyte_g/Shoots*1000) %>%
+  left_join(LAI21) %>%
+  mutate(Epiphyte = Epiphyte/LAI)
+  
+ggplot(epiphyte_grass21, aes(Treatment, Epiphyte)) +
+  geom_boxplot() +
+  geom_point() +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) +
+  ylab(expression(paste("Epiphytic Load (mg cm"^-2," shoot"^-1, ")"))) +
+  ylim(0,3)
+
+lm.phyte21 <- lm(data = epiphyte_grass21, Epiphyte ~ Treatment * Site)
+
+plot(simulateResiduals(lm.phyte21)) #Passes - ish
+
+Anova(lm.phyte21, type = 3)
+
+#Post-hoc
+em.phyte21 <- emmeans(lm.phyte21, ~ Treatment * Site)
+
+pairs(em.phyte21)
+
+plot(em.phyte21, comparisons = T)
+
+cld(em.phyte21)
