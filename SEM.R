@@ -43,45 +43,104 @@ sem.survival <- survey.survival %>%
   dplyr::select(-A, -B, -C, -D, avg.survival) %>%
   mutate(sg_survival = avg.survival/30)
 
+x <- survey.survival %>%
+  filter(Site == "FP" & Treatment == "OY") %>%
+  group_by(Survey) %>% 
+  summarise(avg.survival = mean(avg.survival)) %>%
+  mutate(lag.surv = lag(avg.survival, n = 1, order_by = Survey, default = 30), Site = "FP", Treatment = "OY")
+
+y <- survey.survival %>%
+  filter(Site == "FP" & Treatment == "SG") %>%
+  group_by(Survey) %>% 
+  summarise(avg.survival = mean(avg.survival)) %>%
+  mutate(lag.surv = lag(avg.survival, n = 1, order_by = Survey, default = 30), Site = "FP", Treatment = "SG")
+
+z <- survey.survival %>%
+  filter(Site == "FP" & Treatment == "CB") %>%
+  group_by(Survey) %>% 
+  summarise(avg.survival = mean(avg.survival)) %>%
+  mutate(lag.surv = lag(avg.survival, n = 1, order_by = Survey, default = 30), Site = "FP", Treatment = "CB")
+
+fp.ss <- rbind(x,y,z)
+
+x <- survey.survival %>%
+  filter(Site == "LL" & Treatment == "OY") %>%
+  group_by(Survey) %>% 
+  summarise(avg.survival = mean(avg.survival)) %>%
+  mutate(lag.surv = lag(avg.survival, n = 1, order_by = Survey, default = 30), Site = "LL", Treatment = "OY")
+
+y <- survey.survival %>%
+  filter(Site == "LL" & Treatment == "SG") %>%
+  group_by(Survey) %>% 
+  summarise(avg.survival = mean(avg.survival)) %>%
+  mutate(lag.surv = lag(avg.survival, n = 1, order_by = Survey, default = 30), Site = "LL", Treatment = "SG")
+
+z <- survey.survival %>%
+  filter(Site == "LL" & Treatment == "CB") %>%
+  group_by(Survey) %>% 
+  summarise(avg.survival = mean(avg.survival)) %>%
+  mutate(lag.surv = lag(avg.survival, n = 1, order_by = Survey, default = 30), Site = "LL", Treatment = "CB")
+
+ll.ss <- rbind(x,y,z)
+
+ss <- rbind(fp.ss, ll.ss) %>%
+  dplyr::select(Survey, Site, Treatment, lag.surv)
+
+sem.survival <- left_join(sem.survival, ss) %>%
+  mutate(delta_survival = (avg.survival - lag.surv)/lag.surv)
+
 sem.data <- left_join(sem.data, sem.survival)
 
 sem.data <- na.omit(sem.data)
 
 #SEM ---------------------------------------------------------------------------
 
+sem.data.adj <- sem.data %>% filter(Treatment != "CB") %>%
+  mutate(Site = case_when(Site == "FP" ~ 0,
+                          Site == "LL" ~ 1),
+         Treatment = case_when(Treatment == "SG" ~ 0,
+                               Treatment == "CB" ~ 1,
+                               Treatment == "OY" ~ 2))
+
 sem <- psem(
-  lmer(cover.div ~ Treatment + (1|Survey), data = sem.data),
-  lmer(drift_mg_day ~ Treatment + (1|Survey), data = sem.data),
-  lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = sem.data),
-  lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + (1|Survey), data = sem.data), 
-  lmer(Epiphyte_mg_day ~ drift_mg_day + Grazer_mg_day + Treatment + (1|Survey), data = sem.data), 
-  lmer(sg_survival ~ drift_mg_day + fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = sem.data),
-  data = sem.data
+  lmer(cover.div ~ Treatment + Site + (1|Survey), data = sem.data.adj),
+  lmer(drift_mg_day ~ Treatment + Site + (1|Survey), data = sem.data.adj),
+  lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = sem.data.adj),
+  lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + Site + (1|Survey), data = sem.data.adj), 
+  lmer(Epiphyte_mg_day ~ Grazer_mg_day + Treatment + (1|Survey), data = sem.data.adj), 
+  lmer(delta_survival ~ fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = sem.data.adj),
+  data = sem.data.adj
 )
+
 summary(sem)
 
-fp.sem.data <- sem.data %>% filter(Site == "FP")
+fp.sem.data <- sem.data %>% filter(Site == "FP" & Treatment != "CB") %>%
+  mutate(Treatment = case_when(Treatment == "SG" ~ 0,
+                               Treatment == "OY" ~ 1))
 
 fp.sem <- psem(
   lmer(cover.div ~ Treatment + (1|Survey), data = fp.sem.data),
   lmer(drift_mg_day ~ Treatment + (1|Survey), data = fp.sem.data),
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
-  lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
-  lmer(Epiphyte_mg_day ~ Grazer_mg_day + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
-  lmer(sg_survival ~ drift_mg_day + fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = fp.sem.data),
+  lmer(Grazer_mg_day ~ Treatment + drift_mg_day + fauna.div + cover.div + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
+  lmer(Epiphyte_mg_day ~ drift_mg_day + Grazer_mg_day + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
+  lmer(delta_survival ~ Treatment + fauna.div + Epiphyte_mg_day + (1|Survey), data = fp.sem.data),
   data = fp.sem.data
 )
+
 summary(fp.sem)
 
-ll.sem.data <- sem.data %>% filter(Site == "LL")
+ll.sem.data <- sem.data %>% filter(Site == "LL" & Treatment != "CB") %>%
+  mutate(Treatment = case_when(Treatment == "SG" ~ 0,
+                               Treatment == "OY" ~ 1))
 
 ll.sem <- psem(
   lmer(cover.div ~ Treatment + (1|Survey), data = ll.sem.data),
   lmer(drift_mg_day ~ Treatment + (1|Survey), data = ll.sem.data),
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = ll.sem.data),
   lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + (1|Survey), data = ll.sem.data), 
-  lmer(Epiphyte_mg_day ~ Grazer_mg_day + Treatment + (1|Survey), data = ll.sem.data), 
-  lmer(sg_survival ~ drift_mg_day + fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = ll.sem.data),
+  lmer(Epiphyte_mg_day ~ fauna.div + Grazer_mg_day + Treatment + (1|Survey), data = ll.sem.data), #Treatment + fauna added from null
+  lmer(delta_survival ~ fauna.div + Epiphyte_mg_day + (1|Survey), data = ll.sem.data),
   data = ll.sem.data
 )
 summary(ll.sem)

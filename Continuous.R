@@ -36,10 +36,18 @@ AvgDailyLight <- Light %>%
 ggplot(AvgDailyLight, aes(HOD, DailyPAR)) +
   geom_line() +
   geom_hline(yintercept = 100, linetype = "dashed") +
-  geom_hline(yintercept = 300, linetype = "dashed", color = "darkred") +
-  facet_wrap(~Site) +
+  scale_y_continuous(breaks = seq(0, 600, by = 100)) +
+  scale_x_continuous(breaks = seq(0, 24, by = 2)) +
   theme_classic() +
-  labs(x = "Hour of the Day", y = expression(paste("PAR (", mu, "mol s"^-1, " m"^-2, ")")))
+  labs(x = "Hour of the Day", y = expression(paste("PAR (", mu, "mol s"^-1, " m"^-2, ")"))) +
+  facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12))
 
 start <-as.Date(c("2022-06-20","2022-07-08","2022-07-28", "2022-08-10","2022-08-16","2022-09-08"), "%Y-%m-%d")
 end <- as.Date(c("2022-07-08","2022-07-28","2022-07-29", "2022-08-16","2022-09-08","2022-09-30"), "%Y-%m-%d")
@@ -63,15 +71,51 @@ DailyHsat <- adj_light %>%
   group_by(Site, Survey, HOD) %>%
   summarise(DailyPAR = mean(PAR)) %>%
   ungroup(HOD) %>%
-  summarise(AvgHsat = sum(DailyPAR>300)/4)
+  summarise(AvgHsat = sum(DailyPAR>100)/4)
   
 ggplot(DailyHsat, aes(Survey, AvgHsat, fill = Site)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") + 
   scale_fill_grey() +
   theme_classic() +
-  ylab("Hsat (h)")
+  ylab(expression(paste("H"["sat"]," (hours)")))
 
-#Hsat - Saturation limit 100 - 300
+SubDailyHsat <- adj_light %>%
+  mutate(Date = as.Date(EST, format = "%Y-%m-%d")) %>%
+  mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60), Day = day(EST)) %>%
+  group_by(Site, Survey, Day) %>%
+  summarise(SubdailyPAR = sum(PAR>100)/4) %>%
+  mutate(Survey = as.factor(Survey))
+
+ggplot(SubDailyHsat, aes(Survey, SubdailyPAR, fill = Site)) +
+  geom_boxplot(outlier.shape = NA ) +
+  geom_point(alpha = 0.4, position=position_dodge(width=0.75)) +
+  theme_classic() +
+  scale_y_continuous(breaks = seq(0, 20, by = 4)) +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80")) +
+  labs(x = "Survey", y = expression(paste("Daily H"["sat"]," (hours)"))) +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12)) 
+
+#Hsat - Saturation limit 100
+
+lm.hsat <- lm(SubdailyPAR ~ Site * Survey, data = SubDailyHsat)
+
+plot(simulateResiduals(lm.hsat))
+
+Anova(lm.hsat, type = 2)
+
+em.hsat <- emmeans(lm.hsat, ~ Survey * Site)
+
+pairs(em.hsat)
+
+plot(em.hsat, comparisons = T)
+
+cld(em.hsat)
 
 ## Hobo Temp -------------------------------------------------------------------
 
