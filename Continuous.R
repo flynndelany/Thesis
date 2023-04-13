@@ -159,3 +159,76 @@ ggplot(Over25, aes(Survey, Over25, fill = Site)) +
   scale_fill_grey() +
   theme_classic() +
   ylab("Hours Over 25C")
+
+SubDailyOver <- adj_Temp %>%
+  mutate(Date = as.Date(EST, format = "%Y-%m-%d")) %>%
+  mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60), Day = day(EST)) %>%
+  group_by(Site, Survey, Day) %>%
+  summarise(Subdaily25 = sum(TempC>25)/4) %>%
+  mutate(Survey = as.factor(Survey))
+
+ggplot(SubDailyOver, aes(Survey, Subdaily25, fill = Site)) +
+  geom_boxplot(outlier.shape = NA ) +
+  geom_point(alpha = 0.4, position=position_dodge(width=0.75)) +
+  theme_classic() +
+  scale_y_continuous(breaks = seq(0, 24, by = 4)) +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80")) +
+  labs(x = "Survey", y = expression(paste("Exposure Over 25\u00B0C (hours)"))) +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12))
+
+lm.temp <- lm(Subdaily25 ~ Site * Survey, data = SubDailyOver)
+
+plot(simulateResiduals(lm.temp))
+
+Anova(lm.temp, type = 2)
+
+em.temp <- emmeans(lm.temp, ~ Survey * Site)
+
+pairs(em.temp)
+
+plot(em.temp, comparisons = T)
+
+cld(em.temp)
+
+# Wind ----
+Wind <- read.csv("D:/Projects/Blocks/Data/Wind.csv") %>%
+  mutate(EST = as.POSIXct(Date, format = "%m/%d/%Y"))
+
+ggplot(Wind, aes(EST, Direction)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = c(225, 180))
+
+#avg WindSpeed of days in "fetch zone"
+
+fp.wind <- Wind %>%
+  filter(Direction > 180 & Direction < 305 & WindSpeed > 12) %>%
+  tally() %>%
+  mutate(Site = "Far Pond")
+
+ll.wind <- Wind %>%
+  filter(Direction > 220 & Direction < 330 & WindSpeed > 12) %>%
+  tally() %>%
+  mutate(Site = "Landscape Lab")
+
+waves <- rbind(fp.wind, ll.wind)
+
+ggplot(waves, aes(Site, n)) +
+  geom_col(fill = "grey80", color = "black") +
+  theme_classic() +
+  scale_y_continuous(breaks = seq(0, 60, by = 10)) +
+  labs(x = "Site", y = "Days of High Wind Speed") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20),
+        strip.text.x = element_text(size = 12))
+  

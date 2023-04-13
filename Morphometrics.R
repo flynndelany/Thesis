@@ -21,7 +21,7 @@ Survival <- Morph %>%
   mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",
                                startsWith(substr(ID,4,6), "O") == T ~ "OY",
                               startsWith(substr(ID,4,6), "C") == T ~ "CB"), 
-         Survival = case_when(is.na(Shoots) == F ~ Shoots/30,
+         Survival = case_when(is.na(Shoots) == F ~   signif(Shoots/30 * 100, digits = 5),
                               is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2))
 
 Survival2021 <- Morph2021 %>%
@@ -31,18 +31,19 @@ Survival2021 <- Morph2021 %>%
   mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",
                                startsWith(substr(ID,4,6), "O") == T ~ "OY",
                                startsWith(substr(ID,4,6), "C") == T ~ "CB"), 
-         Survival = case_when(is.na(Shoots) == F ~ Shoots/30,
+         Survival = case_when(is.na(Shoots) == F ~ (Shoots/30 * 100),
                               is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2))
 
 site22.labs <- c("Far Pond", "Landscape Lab")
 names(site22.labs) <- c("FP", "LL")
+
 
 ggplot(Survival, aes(x = Treatment, y = Survival)) +
   geom_boxplot() +
   geom_point() +
   facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
   theme_classic() +
-  ylim(0,3) + 
+  ylim(0,300) + 
   ylab("Survival (%)") +
   theme(axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
@@ -50,7 +51,8 @@ ggplot(Survival, aes(x = Treatment, y = Survival)) +
         axis.title.x = element_text(vjust = - 3),
         plot.margin = margin(b = 20,
                              l = 20),
-        strip.text.x = element_text(size = 12))
+        strip.text.x = element_text(size = 12)) +
+  geom_hline(yintercept = 100, linetype = "dashed")
 
 site21.labs <- c("Far Pond", "Landscape Lab", "Tiana Bay")
 names(site21.labs) <- c("FP", "LL", "TB")
@@ -521,6 +523,7 @@ ggplot(Above_bm, aes(Treatment, Above)) +
   geom_point() +
   facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
   theme_classic() +
+  ylim(0,100) +
   theme(axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         axis.title.y = element_text(vjust = + 6),
@@ -584,7 +587,7 @@ epiphyte_grass <- read.csv("D:/Projects/Blocks/Data/EpiphytesGrass.csv") %>%
                                startsWith(Block, "C") == T ~ "CB"),
          Epiphyte = Epiphyte_g/Shoots*1000) %>%
   left_join(LAI) %>%
-  mutate(Epiphyte = Epiphyte/LAI)
+  mutate(Epiphyte = signif(Epiphyte/LAI, digits =  6))
 
 ggplot(epiphyte_grass, aes(Treatment, Epiphyte)) +
   geom_boxplot() +
@@ -598,8 +601,7 @@ ggplot(epiphyte_grass, aes(Treatment, Epiphyte)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 12)) +
-  ylab(expression(paste("Epiphytic Load (mg cm"^-2," shoot"^-1, ")"))) +
-  ylim(0,3)
+  ylab(expression(paste("Epiphytic Load (mg cm"^-2," shoot"^-1, ")")))
 
 #Anova
 lm.phyte <- lm(data = epiphyte_grass, Epiphyte ~ Treatment * Site)

@@ -29,7 +29,16 @@ avg.scores.fauna <- scores.fauna %>%
 ggplot(avg.scores.fauna, aes(x = NMDS1, y = NMDS2)) +
   geom_point(size = 4,aes(shape = Treatment, colour = Site)) +
   geom_point(data = scores.fauna, aes(x = NMDS1, y = NMDS2, shape = Treatment, colour = Site), alpha =.5) +
-  theme_classic()
+  theme_classic() +
+  scale_colour_manual(values = c("grey30", "grey60")) +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20,
+                             t = 20),
+        strip.text.x = element_text(size = 12))
 
 #ANOSIM Test like in R 
 anosim(mtrx.fauna, Fauna$Site, permutations = 9999, distance = "bray")
@@ -82,9 +91,18 @@ avg.scores.cover <- scores.cover %>%
 ggplot(avg.scores.cover, aes(x = NMDS1, y = NMDS2)) +
   geom_point(size = 4,aes(shape = Treatment, colour = Site)) +
   geom_point(data = scores.cover, aes(x = NMDS1, y = NMDS2, shape = Treatment, colour = Site), alpha =.5) +
-  theme_classic()
+  theme_classic() +
+  scale_colour_manual(values = c("grey30", "grey60")) +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14),
+        axis.title.y = element_text(vjust = + 6),
+        axis.title.x = element_text(vjust = - 3),
+        plot.margin = margin(b = 20,
+                             l = 20,
+                             t = 20),
+        strip.text.x = element_text(size = 12))
 
-# Grass Survival
+# Grass Survival -----
 
 survey.survival <- read.csv("D:/Projects/Blocks/Data/SurveyGrass.csv") %>%
   dplyr::select(-Surveyer, -DateTime, -ID) %>%
