@@ -370,7 +370,7 @@ plot(simulateResiduals(lm.lai)) #Passes
 Anova(lm.lai, Type = 2)
 
 #Post-hoc
-em.lai <- emmeans(lm.lai, ~ Treatment * Site)
+em.lai <- emmeans(lm.lai, ~ Treatment)
 
 pairs(em.lai)
 
@@ -503,7 +503,6 @@ AbovetoAdd <- read.csv("D:/Projects/Blocks/Data/BM_AboveLost.csv") %>%
   dplyr::select(Site = SITE, Block = TREATMENT, Patch = PATCH, Above = ABOVE_g, Shoots ) %>%
   mutate(Above = Above/Shoots) %>%
   dplyr::select(-Shoots)
-
 Above_bm <- read.csv("D:/Projects/Blocks/Data/BM_Above.csv") %>%
   group_by(Site, Block, Patch, Sht) %>%
   summarise(Above = sum(Above_g)) %>%

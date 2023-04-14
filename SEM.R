@@ -107,8 +107,8 @@ sem <- psem(
   lmer(drift_mg_day ~ Treatment + Site + (1|Survey), data = sem.data.adj),
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = sem.data.adj),
   lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + Site + (1|Survey), data = sem.data.adj), 
-  lmer(Epiphyte_mg_day ~ Grazer_mg_day + Treatment + (1|Survey), data = sem.data.adj), 
-  lmer(delta_survival ~ fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = sem.data.adj),
+  lmer(Epiphyte_mg_day ~ Treatment + Grazer_mg_day + (1|Survey), data = sem.data.adj), 
+  lmer(delta_survival ~ fauna.div + Epiphyte_mg_day + (1|Survey), data = sem.data.adj),
   data = sem.data.adj
 )
 
