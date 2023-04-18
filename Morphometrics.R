@@ -32,7 +32,8 @@ Survival2021 <- Morph2021 %>%
                                startsWith(substr(ID,4,6), "O") == T ~ "OY",
                                startsWith(substr(ID,4,6), "C") == T ~ "CB"), 
          Survival = case_when(is.na(Shoots) == F ~ (Shoots/30 * 100),
-                              is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2))
+                              is.na(Shoots) == T ~ 0), Site = substr(ID, 1, 2)) %>%
+  group_by(Site) %>% summarise(mean(Survival)) %>% view()
 
 site22.labs <- c("Far Pond", "Landscape Lab")
 names(site22.labs) <- c("FP", "LL")
@@ -489,7 +490,7 @@ plot(simulateResiduals(lm.can21)) #Passes
 Anova(lm.can21, type = 2)
 
 #Post-hoc
-em.can21 <- emmeans(lm.can21, ~ Treatment * Site)
+em.can21 <- emmeans(lm.can21, ~ Site)
 
 pairs(em.can21)
 
@@ -628,7 +629,8 @@ epiphyte_grass21 <- read.csv("D:/Projects/Blocks/Data/EpiphytesGrass2021.csv") %
          Epiphyte_g = Tin_Epiphyte_g - Tin_g,
          Epiphyte = Epiphyte_g/Shoots*1000) %>%
   left_join(LAI21) %>%
-  mutate(Epiphyte = Epiphyte/LAI)
+  mutate(Epiphyte = Epiphyte/LAI) %>%
+  mutate(Epiphyte = signif(Epiphyte/LAI, digits =  6))
   
 ggplot(epiphyte_grass21, aes(Treatment, Epiphyte)) +
   geom_boxplot() +
@@ -649,7 +651,7 @@ lm.phyte21 <- lm(data = epiphyte_grass21, Epiphyte ~ Treatment * Site)
 
 plot(simulateResiduals(lm.phyte21)) #Passes - ish
 
-Anova(lm.phyte21, type = 3)
+Anova(lm.phyte21, type = 2)
 
 #Post-hoc
 em.phyte21 <- emmeans(lm.phyte21, ~ Treatment * Site)
