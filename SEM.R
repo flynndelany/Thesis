@@ -10,9 +10,9 @@ sem.data <- Cover %>% dplyr::select(Survey, Site, Block, Treatment) %>%
 
 ## Cover & Fauna Diversity
 
-sem.data$cover.div <- LCBD.cover$LCBD
+sem.data$cover.div <- 1-simpson.unb(round(mtrx.cover*100)) #LCBD.cover$LCBD
 
-sem.data$fauna.div <- LCBD.fauna$LCBD
+sem.data$fauna.div <- 1-simpson.unb(round(mtrx.fauna)) #LCBD.fauna$LCBD
 
 ## Epifauna & Epiphyte & Drift Algae
 
@@ -36,6 +36,8 @@ sem.drift <- drift %>%
   summarise(drift_mg_day = mean(Dry_mg_day))
 
 sem.data <- full_join(sem.data, sem.drift)
+
+sem.data <- na.omit(sem.data)
 
 ## Seagrass Survival
 

@@ -111,7 +111,8 @@ survey.survival <- read.csv("D:/Projects/Blocks/Data/SurveyGrass.csv") %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB")) %>%
-  filter(Survey < 6)
+  filter(Survey < 6) %>%
+  mutate(TotalSurvival = A + B + C + D)
 
 ggplot(survey.survival, aes(Treatment, avg.survival, fill = Site)) +
   geom_boxplot() +

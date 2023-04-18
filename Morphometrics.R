@@ -111,12 +111,12 @@ Productivity <- Morph %>%
   mutate(New_lai = New_mm*Width_mm) %>%
   group_by(ID, Site, Block, Patch) %>%
   summarise(Shoots = n_distinct(Sht),
-            GrowthRate = case_when(Site == "LL" ~ (sum(New_lai))/(8*Shoots),
-                                   Site == "FP" ~ sum(New_lai)/(9*Shoots))) %>%
+            GrowthRate = case_when(Site == "LL" ~ (sum(New_lai))/(8), # add back days*shoot for individual shoot productivity
+                                   Site == "FP" ~ sum(New_lai)/(9))) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB")) %>%
-  distinct() 
+  distinct()
 
 Productivity21 <- Morph2021 %>%
   filter(New_mm != is.na(New_mm)) %>%
@@ -143,7 +143,7 @@ ggplot(Productivity, aes(x = Treatment, y = GrowthRate)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 12)) +
-  ylab(expression(paste("Productivity (mm"^" 2"," day"^-1," shoot"^-1, ")")))
+  ylab(expression(paste("Areal Productivity (mm"^" 2"," day"^-1, ")")))
 
 ggplot(Productivity21, aes(x = Treatment, y = GrowthRate)) +
   geom_boxplot() +
@@ -163,7 +163,7 @@ lm.grate <- lm(data = Productivity, GrowthRate ~ Site * Treatment)
 
 plot(simulateResiduals(lm.grate))
 
-Anova(lm.grate, type = 2)
+Anova(lm.grate, type = 3)
 
 em.grate <- emmeans(lm.grate, ~ Site * Treatment)
 
@@ -232,10 +232,10 @@ ggplot(OrdinalShoots, aes(x = Treatment, y = Count)) +
 Branching <- OrdinalShoots %>%
   full_join(Survival) %>%
   filter(OrdinalValue == "Secondary") %>%
-  dplyr::select(Site, Block, Patch, Treatment, SecondShts = Count, Shoots) %>%
+  dplyr::select(Site, Block, Patch, Treatment, SecondShts = Count, Shoots) #%>%
   mutate(Branch = SecondShts/Shoots) 
 
-ggplot(Branching, aes(x = Treatment, y = Branch)) +
+ggplot(Branching, aes(x = Treatment, y = SecondShts)) +
   geom_boxplot() +
   geom_point() +
   facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
@@ -247,9 +247,9 @@ ggplot(Branching, aes(x = Treatment, y = Branch)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 12)) +
-  ylab("Proportion of Shoots as Lateral Branches") + ylim(0,1)
+  ylab("Total Lateral Branches") + ylim(0,40)
 
-lm.branch <- lm(data = Branching, Branch ~ Site * Treatment)
+lm.branch <- lm(data = Branching, SecondShts ~ Site * Treatment)
 
 plot(simulateResiduals(lm.branch)) #Passes
 
@@ -508,10 +508,10 @@ Above_bm <- read.csv("D:/Projects/Blocks/Data/BM_Above.csv") %>%
   group_by(Site, Block, Patch, Sht) %>%
   summarise(Above = sum(Above_g)) %>%
   ungroup(Sht) %>%
-  summarise(Above = mean(Above)) %>%
+  summarise(Above = sum(Above)) %>% #change back to mean to get shoot^-1
   rbind(AbovetoAdd) %>%
   group_by(Site, Block, Patch) %>%
-  summarise(Above = sum(Above)*1000) %>%
+  summarise(Above = sum(Above)) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB"))
@@ -523,7 +523,6 @@ ggplot(Above_bm, aes(Treatment, Above)) +
   geom_point() +
   facet_wrap(~Site, labeller = labeller(Site = site21.labs)) +
   theme_classic() +
-  ylim(0,100) +
   theme(axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
         axis.title.y = element_text(vjust = + 6),
@@ -531,13 +530,15 @@ ggplot(Above_bm, aes(Treatment, Above)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 12)) +
-  ylab(expression(paste("Aboveground Biomass (mg shoot"^-1, ")")))
+  ylab(expression(paste("Total Aboveground Biomass (g)")))
 
 lm.above <- lm(Above ~ Site * Treatment, Above_bm)
 
 plot(simulateResiduals(lm.above))
 
 Anova(lm.above, type = 2)
+
+
 
 ## Below Biomass (Graphs Complete) ---------------------------------------------------------------
 Below_bm <- read.csv("D:/Projects/Blocks/Data/BM_Below.csv") %>%
@@ -588,7 +589,10 @@ epiphyte_grass <- read.csv("D:/Projects/Blocks/Data/EpiphytesGrass.csv") %>%
          Epiphyte = Epiphyte_g/Shoots*1000) %>%
   left_join(LAI) %>%
   mutate(Epiphyte = signif(Epiphyte/LAI, digits =  6))
-  
+
+epitotal <- epiphyte_grass %>%
+  group_by(Site, Treatment) %>%
+  summarise(Epiphyte = mean((1000*Epiphyte_g)/LAI))
 
 ggplot(epiphyte_grass, aes(Treatment, Epiphyte)) +
   geom_boxplot() +

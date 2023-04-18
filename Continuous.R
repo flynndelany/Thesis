@@ -84,7 +84,7 @@ SubDailyHsat <- adj_light %>%
   mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60), Day = day(EST)) %>%
   group_by(Site, Survey, Day) %>%
   summarise(SubdailyPAR = sum(PAR>100)/4) %>%
-  mutate(Survey = as.factor(Survey)) 
+  mutate(Survey = as.factor(Survey))
 
 ggplot(SubDailyHsat, aes(Survey, SubdailyPAR, fill = Site)) +
   geom_boxplot(outlier.shape = NA ) +
@@ -99,7 +99,8 @@ ggplot(SubDailyHsat, aes(Survey, SubdailyPAR, fill = Site)) +
         axis.title.x = element_text(vjust = - 3),
         plot.margin = margin(b = 20,
                              l = 20),
-        strip.text.x = element_text(size = 12)) 
+        strip.text.x = element_text(size = 12)) +
+  geom_hline(yintercept = c(7.3, 10.6))
 
 #Hsat - Saturation limit 100
 

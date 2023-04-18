@@ -81,3 +81,70 @@ ggplot(data = drift, aes(x = Treatment, y = Dry_mg_day)) +
   geom_point() +
   facet_wrap(~Site) +
   theme_classic()
+
+## Test Plots For Brad --------
+
+zz <- epiphytes.survey %>%
+  dplyr::select(Survey, Site, Block, Treatment, Rep, Epiphytes = Dry_mg) %>%
+  mutate(Epiphytes = Epiphytes/14)
+
+xx <- drift %>%
+  dplyr::select(Survey, Site, Block, Treatment, Rep, DriftAlgae = Dry_mg)
+
+yy <- Dry_Amph %>%
+  dplyr::select(Survey, Site, Block, Treatment, Rep, Epifauna = Dry_mg)
+
+ww <- survey.survival %>%
+  dplyr::select(Survey, Site, Block, Treatment, SG = TotalSurvival)
+  
+zzz <- left_join(xx,yy)
+
+yyy <- left_join(zz,yy)
+
+www <- left_join(ww, yy)
+
+ggplot(zzz, aes(Epifauna, DriftAlgae)) +
+  geom_point() +
+  labs(x = "Total Epifauna (mg)", y = "Total Drift Algae (mg)") +
+  theme_classic()
+
+summary(lm(Epifauna ~ DriftAlgae, data = zzz))
+
+ggplot(yyy, aes(Epifauna, Epiphytes, color = Treatment)) +
+  geom_point() +
+  labs(x = "Total Epifauna (mg)", y = expression(paste("Total Epiphytes (mg "," cm"^-2," )"))) +
+  theme_classic()
+
+summary(lm(Epifauna ~ Epiphytes, data = yyy))
+
+ggplot(www, aes(SG, Epifauna, color = Treatment)) +
+  geom_point() +
+  labs(x = "Surrounding SG", y = "Total Epifauna (mg)") +
+  theme_classic()
+
+summary(lm(Epifauna ~ SG, data = www))
+
+#Cumulative plots
+
+xx %>%
+  group_by(Survey, Site, Treatment) %>%
+  summarise(Drift_mean = mean(DriftAlgae)) %>% 
+  group_by(Site, Treatment) %>%
+  mutate(Drift_cum = cumsum(Drift_mean)) %>%
+  ggplot(aes(Survey, Drift_cum)) +
+  geom_line() +
+  facet_grid(Site ~ Treatment) +
+  theme_classic() +
+  ylab("Cumulative Drift Algae (mg)")
+
+zz %>%
+  group_by(Survey, Site, Treatment) %>%
+  summarise(phyte_mean = mean(Epiphytes)) %>% 
+  group_by(Site, Treatment) %>%
+  mutate(phyte_cum = cumsum(phyte_mean)) %>%
+  ggplot(aes(Survey, phyte_cum)) +
+  geom_line() +
+  geom_hline(data = epitotal, aes(yintercept = Epiphyte), linetype = "dashed") +
+  facet_grid(Site ~ Treatment) +
+  theme_classic() +
+  ylab(expression(paste("Cumulative ASU Epiphytes (mg", "  " ," cm"^-2, ")")))
