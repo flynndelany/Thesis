@@ -1,11 +1,22 @@
 
 ## Faunal Diversity (added mud crab to 1 & 12 for test & Misc of all 1s) ------------------------
-
 Fauna <- read.csv("D:/Projects/Blocks/Data/SurveyFauna.csv") %>%
   mutate(Treatment = case_when(startsWith(substr(ID,4,6), "G") == T ~ "SG",
                                startsWith(substr(ID,4,6), "O") == T ~ "OY",
                                startsWith(substr(ID,4,6), "C") == T ~ "CB"))
 
+FaunaSum <- Fauna %>%
+  group_by(Site, Treatment) %>%
+  summarise(across(RockCrab:RockyBlenny, sum)) %>%
+  pivot_longer(RockCrab:RockyBlenny, names_to = "Species", values_to = "CountSum")
+
+ggplot(FaunaSum) +
+  facet_grid(Site ~ Treatment, scale = "free_x") +
+  geom_bar(aes(x = reorder(Species, CountSum), CountSum), stat = "identity") +
+  coord_flip() +
+  labs(x = "Species", y = "Count")
+
+#Diversity
 prep.fauna <- Fauna[,8:ncol(Fauna)-1]
 mtrx.fauna <- as.matrix(prep.fauna)
 
