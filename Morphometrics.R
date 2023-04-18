@@ -115,7 +115,7 @@ Productivity <- Morph %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB")) %>%
-  distinct()
+  distinct() 
 
 Productivity21 <- Morph2021 %>%
   filter(New_mm != is.na(New_mm)) %>%
@@ -232,7 +232,7 @@ Branching <- OrdinalShoots %>%
   full_join(Survival) %>%
   filter(OrdinalValue == "Secondary") %>%
   dplyr::select(Site, Block, Patch, Treatment, SecondShts = Count, Shoots) %>%
-  mutate(Branch = SecondShts/Shoots)
+  mutate(Branch = SecondShts/Shoots) 
 
 ggplot(Branching, aes(x = Treatment, y = Branch)) +
   geom_boxplot() +
@@ -346,7 +346,7 @@ LAI <- Morph %>%
   summarise(avgLAI = mean(LAI)/100, LAI = sum(LAI)/100) %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
-                               startsWith(Block, "C") == T ~ "CB"))
+                               startsWith(Block, "C") == T ~ "CB")) 
 
 ggplot(LAI, aes(x = Treatment, y = avgLAI)) +
   geom_boxplot() +
@@ -587,6 +587,7 @@ epiphyte_grass <- read.csv("D:/Projects/Blocks/Data/EpiphytesGrass.csv") %>%
          Epiphyte = Epiphyte_g/Shoots*1000) %>%
   left_join(LAI) %>%
   mutate(Epiphyte = signif(Epiphyte/LAI, digits =  6))
+  
 
 ggplot(epiphyte_grass, aes(Treatment, Epiphyte)) +
   geom_boxplot() +

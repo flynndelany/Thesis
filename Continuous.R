@@ -84,7 +84,7 @@ SubDailyHsat <- adj_light %>%
   mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60), Day = day(EST)) %>%
   group_by(Site, Survey, Day) %>%
   summarise(SubdailyPAR = sum(PAR>100)/4) %>%
-  mutate(Survey = as.factor(Survey))
+  mutate(Survey = as.factor(Survey)) 
 
 ggplot(SubDailyHsat, aes(Survey, SubdailyPAR, fill = Site)) +
   geom_boxplot(outlier.shape = NA ) +
@@ -165,7 +165,9 @@ SubDailyOver <- adj_Temp %>%
   mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60), Day = day(EST)) %>%
   group_by(Site, Survey, Day) %>%
   summarise(Subdaily25 = sum(TempC>25)/4) %>%
-  mutate(Survey = as.factor(Survey))
+  mutate(Survey = as.factor(Survey)) %>%
+  group_by(Site) %>% summarise(mean(Subdaily25)) %>% view()
+
 
 ggplot(SubDailyOver, aes(Survey, Subdaily25, fill = Site)) +
   geom_boxplot(outlier.shape = NA ) +
@@ -208,7 +210,7 @@ ggplot(Wind, aes(EST, Direction)) +
 #avg WindSpeed of days in "fetch zone"
 
 fp.wind <- Wind %>%
-  filter(Direction > 180 & Direction < 305 & WindSpeed > 12) %>%
+  filter(Direction > 180 & Direction < 255 & WindSpeed > 12) %>%
   tally() %>%
   mutate(Site = "Far Pond")
 

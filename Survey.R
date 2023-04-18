@@ -102,6 +102,8 @@ ggplot(avg.scores.cover, aes(x = NMDS1, y = NMDS2)) +
                              t = 20),
         strip.text.x = element_text(size = 12))
 
+anosim(mtrx.cover, Cover$Site, permutations = 9999, distance = "bray")
+anosim(mtrx.cover, Cover$Treatment, permutations = 9999, distance = "bray")
 # Grass Survival -----
 
 survey.survival <- read.csv("D:/Projects/Blocks/Data/SurveyGrass.csv") %>%
