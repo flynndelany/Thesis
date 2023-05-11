@@ -5,14 +5,15 @@ sem.data <- data.frame()
 
 ## Survey & Site & Block & Treatment
 
-sem.data <- Cover %>% dplyr::select(Survey, Site, Block, Treatment) %>%
+sem.data <- CoverSimp %>% dplyr::select(Survey, Site, Block, Treatment) %>%
   mutate(Survey)
 
 ## Cover & Fauna Diversity
 
-sem.data$cover.div <- 1-simpson.unb(round(mtrx.cover*100)) #LCBD.cover$LCBD
+sem.data$cover.div <- CoverSimp$SimpD #LCBD.cover$LCBD
 
-sem.data$fauna.div <- 1-simpson.unb(round(mtrx.fauna)) #LCBD.fauna$LCBD
+sem.data <- left_join(sem.data, FaunaSimp) %>%
+  rename(fauna.div = SimpD)#LCBD.fauna$LCBD
 
 ## Epifauna & Epiphyte & Drift Algae
 
@@ -95,6 +96,11 @@ sem.data <- left_join(sem.data, sem.survival)
 
 sem.data <- na.omit(sem.data)
 
+sem.data <- left_join(sem.data, sem.light)
+
+sem.data <- left_join(sem.data, sem.temp) %>%
+  ungroup()
+
 #SEM ---------------------------------------------------------------------------
 
 sem.data.adj <- sem.data %>% filter(Treatment != "CB") %>%
@@ -104,21 +110,28 @@ sem.data.adj <- sem.data %>% filter(Treatment != "CB") %>%
                                Treatment == "CB" ~ 1,
                                Treatment == "OY" ~ 2))
 
+summary(sem.data.adj)
+
 sem <- psem(
-  lmer(cover.div ~ Treatment + Site + (1|Survey), data = sem.data.adj),
-  lmer(drift_mg_day ~ Treatment + Site + (1|Survey), data = sem.data.adj),
+  lmer(cover.div ~ Treatment + (1|Survey), data = sem.data.adj),
+  lmer(drift_mg_day ~ Site +Treatment + avgHsat + (1|Survey), data = sem.data.adj),
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = sem.data.adj),
-  lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + Site + (1|Survey), data = sem.data.adj), 
-  lmer(Epiphyte_mg_day ~ Treatment + Grazer_mg_day + (1|Survey), data = sem.data.adj), 
-  lmer(sg_survival ~ fauna.div + Epiphyte_mg_day + Site +(1|Survey), data = sem.data.adj),
+  lmer(Grazer_mg_day ~ avg25 + Site + drift_mg_day + fauna.div + cover.div + Treatment + (1|Survey), data = sem.data.adj), 
+  lmer(Epiphyte_mg_day ~ Grazer_mg_day + Treatment + (1|Survey), data = sem.data.adj),
+  lmer(avgHsat ~ Site + (1|Survey), data = sem.data.adj),
+  lmer(avg25 ~ Site + avgHsat + (1|Survey), data = sem.data.adj),
+  lmer(sg_survival ~ fauna.div + Epiphyte_mg_day + Treatment + avg25 + avgHsat +(1|Survey), data = sem.data.adj),
   data = sem.data.adj
 )
 
-summary(sem)
+sum.sem <- summary(sem)
 
-fp.sem.data <- sem.data %>% filter(Site == "FP" & Treatment != "CB") %>%
+write.csv(sum.sem$coefficients, "SEMsummary.csv")
+
+fp.sem.data <- sem.data %>% filter(Site == "FP", Treatment != "CB") %>%
   mutate(Treatment = case_when(Treatment == "SG" ~ 0,
-                               Treatment == "OY" ~ 1))
+                               Treatment == "CB" ~ 1, 
+                               Treatment == "OY" ~ 2))
 
 fp.sem <- psem(
   lmer(cover.div ~ Treatment + (1|Survey), data = fp.sem.data),
@@ -126,15 +139,17 @@ fp.sem <- psem(
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
   lmer(Grazer_mg_day ~ Treatment + drift_mg_day + fauna.div + cover.div + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
   lmer(Epiphyte_mg_day ~ drift_mg_day + Grazer_mg_day + (1|Survey), data = fp.sem.data), ## good qq poor res vs pred
-  lmer(sg_survival ~ Treatment + fauna.div + Epiphyte_mg_day + (1|Survey), data = fp.sem.data),
+  lmer(sg_survival ~ fauna.div + Epiphyte_mg_day + Treatment  + (1|Survey), data = fp.sem.data),
   data = fp.sem.data
 )
 
-summary(fp.sem)
+sumfp <- summary(fp.sem)
+write.csv(sumfp$coefficients, "FP_SEMsummary.csv")
 
-ll.sem.data <- sem.data %>% filter(Site == "LL" & Treatment != "CB") %>%
+ll.sem.data <- sem.data %>% filter(Site == "LL", Treatment != "CB") %>%
   mutate(Treatment = case_when(Treatment == "SG" ~ 0,
-                               Treatment == "OY" ~ 1))
+                               Treatment == "CB" ~ 1, 
+                               Treatment == "OY" ~ 2))
 
 ll.sem <- psem(
   lmer(cover.div ~ Treatment + (1|Survey), data = ll.sem.data),
@@ -142,13 +157,14 @@ ll.sem <- psem(
   lmer(fauna.div ~ cover.div + drift_mg_day + Treatment + (1|Survey), data = ll.sem.data),
   lmer(Grazer_mg_day ~ drift_mg_day + fauna.div + cover.div + Treatment + (1|Survey), data = ll.sem.data), 
   lmer(Epiphyte_mg_day ~ fauna.div + Grazer_mg_day + Treatment + (1|Survey), data = ll.sem.data), #Treatment + fauna added from null
-  lmer(delta_survival ~ fauna.div + Epiphyte_mg_day + (1|Survey), data = ll.sem.data),
+  lmer(sg_survival ~ fauna.div + Epiphyte_mg_day + Treatment + (1|Survey), data = ll.sem.data),
   data = ll.sem.data
 )
-summary(ll.sem)
+sumll <- summary(ll.sem)
+write.csv(sumll$coefficients, "LL_SEMsummary.csv")
 
 # Dharma Test Plots
 
-x <- lmer(cover.div ~ Treatment + (1|Survey), data = fp.sem.data)
+x <- lmer(sg_survival ~ fauna.div + Epiphyte_mg_day + Treatment + avgHsat + avg25 + (1|Survey/Site), data = sem.data.adj)
 
 plot(simulateResiduals(x))

@@ -7,16 +7,53 @@ Fauna <- read.csv("D:/Projects/Blocks/Data/SurveyFauna.csv") %>%
 
 FaunaSum <- Fauna %>%
   group_by(Site, Treatment) %>%
-  summarise(across(RockCrab:RockyBlenny, sum)) %>%
-  pivot_longer(RockCrab:RockyBlenny, names_to = "Species", values_to = "CountSum")
+  summarise(across(RockCrab:RockyBlenny, mean)) %>%
+  pivot_longer(RockCrab:RockyBlenny, names_to = "Species", values_to = "CountMean")
 
-ggplot(FaunaSum) +
-  facet_grid(Site ~ Treatment, scale = "free_x") +
-  geom_bar(aes(x = reorder(Species, CountSum), CountSum), stat = "identity") +
+FaunaSum$Treatment <- factor(FaunaSum$Treatment, c("SG", "CB", "OY"))
+
+faunaSG <- FaunaSum %>% filter(Treatment == "SG") %>%
+  ggplot(aes(x = reorder(Species, CountMean), CountMean, fill = Site)) +
+  geom_bar(stat = "identity") +
   coord_flip() +
-  labs(x = "Species", y = "Count")
+  labs(x = "Species", y = "Count") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  xlab("Seagrass Species") +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80"))
+
+faunaCB <- FaunaSum %>% filter(Treatment == "CB") %>%
+  ggplot(aes(x = reorder(Species, CountMean), CountMean, fill = Site)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Species", y = "Count") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  xlab("Control Block Species") +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80"))
+
+faunaOY <- FaunaSum %>% filter(Treatment == "OY") %>%
+ggplot(aes(x = reorder(Species, CountMean), CountMean, fill = Site)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Species", y = "Count") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  xlab("Oyster Reef Species") +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80"))
+
+ggarrange(faunaSG, faunaCB, faunaOY,
+          labels=c("A", "B", "C"),
+          ncol = 1, nrow = 3)
 
 #Diversity
+FaunaSimp <- read.csv("D:/Projects/Blocks/Data/Fauna_SimpsonD.csv") %>%
+  mutate(SimpD = 1-SimpD) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"))
+
+
 prep.fauna <- Fauna[,8:ncol(Fauna)-1]
 mtrx.fauna <- as.matrix(prep.fauna)
 
@@ -26,8 +63,9 @@ LCBD.fauna <- LCBD.comp(dist.fauna, sqrt.D = T)
 
 set.seed(666)
 nmds.fauna <- metaMDS(mtrx.fauna)
-plot(nmds.fauna)
+plot(nmds.fauna, "sites")
 
+nmds.fauna
 scores.fauna <- as.data.frame(scores(nmds.fauna)$sites)
 scores.fauna$Survey <- Fauna$Survey
 scores.fauna$Site <- Fauna$Site
@@ -41,6 +79,8 @@ ggplot(avg.scores.fauna, aes(x = NMDS1, y = NMDS2)) +
   geom_point(size = 4,aes(shape = Treatment, colour = Site)) +
   geom_point(data = scores.fauna, aes(x = NMDS1, y = NMDS2, shape = Treatment, colour = Site), alpha =.5) +
   theme_classic() +
+  geom_vline(xintercept = c(0), color = "grey70", linetype = 2) +
+  geom_hline(yintercept = c(0), color = "grey70", linetype = 2) +
   scale_colour_manual(values = c("grey30", "grey60")) +
   theme(axis.text = element_text(size = 12),
         axis.title = element_text(size = 14),
@@ -71,6 +111,14 @@ ggplot(Fauna.simp, aes(x = Treatment, y = CompSimpD)) +
 
 ## Block Cover Diversity -------------------------------------------------------
 
+CoverSimp <- read.csv("D:/Projects/Blocks/Data/Cover_SimpsonD.csv") %>%
+  mutate(SimpD = 1-SimpD_Cover) %>%
+  group_by(Survey, Site, Block) %>%
+  summarise(SimpD = mean(SimpD)) %>%
+  mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+                               startsWith(Block, "O") == T ~ "OY",
+                               startsWith(Block, "C") == T ~ "CB"))
+
 Cover <- read.csv("D:/Projects/Blocks/Data/SurveyMacroalgae.csv") %>%
   dplyr::select(-Surveyer, -DateTime, -ID, -Q) %>%
   group_by(Survey, Site, Block) %>%
@@ -79,6 +127,47 @@ Cover <- read.csv("D:/Projects/Blocks/Data/SurveyMacroalgae.csv") %>%
   mutate(Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                startsWith(Block, "O") == T ~ "OY",
                                startsWith(Block, "C") == T ~ "CB"))
+
+CoverSum <- Cover %>%
+  group_by(Site, Treatment) %>%
+  summarise(across(Ulva:Bryozoan, mean)) %>%
+  pivot_longer(Ulva:Bryozoan, names_to = "Species", values_to = "CoverMean")
+
+CoverSum$Treatment <- factor(FaunaSum$Treatment, c("SG", "CB", "OY"))
+
+CoverSG <- CoverSum %>% filter(Treatment == "SG") %>%
+  ggplot(aes(x = reorder(Species, CoverMean), CoverMean*100 , fill = Site)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Species", y = "Percent Cover (%)") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  xlab("Seagrass Species") +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80"))
+
+CoverCB <- CoverSum %>% filter(Treatment == "CB") %>%
+  ggplot(aes(x = reorder(Species, CoverMean), CoverMean*100 , fill = Site)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Species", y = "Percent Cover (%)") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  xlab("Control Block Species") +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80"))
+
+CoverOY <- CoverSum %>% filter(Treatment == "OY") %>%
+  ggplot(aes(x = reorder(Species, CoverMean), CoverMean*100, fill = Site)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Species", y = "Percent Cover (%)") +
+  theme_classic() +
+  theme(legend.position = "none") +
+  xlab("Oyster Reef Species") +
+  scale_fill_manual(labels = c("Far Pond", "Landscape Lab"), values = c("grey50", "grey80"))
+
+ggarrange(CoverSG, CoverCB, CoverOY,
+          labels=c("A", "B", "C"),
+          ncol = 1, nrow = 3)
 
 prep.cover <- Cover[, 5:ncol(Cover) - 1]
 mtrx.cover <- as.matrix(prep.cover)

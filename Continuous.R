@@ -86,6 +86,11 @@ SubDailyHsat <- adj_light %>%
   summarise(SubdailyPAR = sum(PAR>100)/4) %>%
   mutate(Survey = as.factor(Survey))
 
+sem.light <- SubDailyHsat %>%
+  group_by(Survey, Site) %>%
+  summarise(avgHsat = mean(SubdailyPAR)) %>%
+  mutate(Survey = as.numeric(Survey))
+
 ggplot(SubDailyHsat, aes(Survey, SubdailyPAR, fill = Site)) +
   geom_boxplot(outlier.shape = NA ) +
   geom_point(alpha = 0.4, position=position_dodge(width=0.75)) +
@@ -166,9 +171,12 @@ SubDailyOver <- adj_Temp %>%
   mutate(MOD = minute(EST), HOD = hour(EST) + (MOD/60), Day = day(EST)) %>%
   group_by(Site, Survey, Day) %>%
   summarise(Subdaily25 = sum(TempC>25)/4) %>%
-  mutate(Survey = as.factor(Survey)) %>%
-  group_by(Site) %>% summarise(mean(Subdaily25)) %>% view()
+  mutate(Survey = as.factor(Survey))
 
+sem.temp <- SubDailyOver %>%
+  group_by(Survey, Site) %>%
+  summarise(avg25 = mean(Subdaily25)) %>%
+  mutate(Survey = as.numeric(Survey))
 
 ggplot(SubDailyOver, aes(Survey, Subdaily25, fill = Site)) +
   geom_boxplot(outlier.shape = NA ) +

@@ -48,7 +48,7 @@ plot(fauna_biomass_model)
 hist(resid(fauna_biomass_model))
 car::vif(fauna_biomass_model)
 
-sg_model <- lmer(sg_survival ~ fauna.div + Epiphyte_mg_day_log + drift_mg_day_log + Treatment +(1|Site/Survey), data = sem.data.adj)
+sg_model <- lmer(sg_survival ~ fauna.div + Epiphyte_mg_day_log + drift_mg_day_log + Treatment + avgHsat + (1|Site/Survey), data = sem.data.adj)
 
 plot(sg_model)
 hist(resid(sg_model))
