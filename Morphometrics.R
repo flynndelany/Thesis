@@ -148,7 +148,7 @@ ggplot(Productivity, aes(x = Treatment, y = GrowthRate)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 18)) +
-  ylab(expression(paste("Productivity (mm"^" 2"," day"^-1, " shoot"^-1, ")")))
+  ylab(expression(paste("Leaf Growth (mm"^" 2"," day"^-1, " shoot"^-1, ")")))
 
 ggplot(Productivity21, aes(x = Treatment, y = GrowthRate)) +
   geom_boxplot() +

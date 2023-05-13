@@ -14,6 +14,8 @@ Por <- full_join(Por_I, Por_F) %>%
                                                           startsWith(Treatment, "O") == T ~ "OY",
                                                           startsWith(Treatment, "C") == T ~ "CB"))
 
+Por$Treatment <- factor(Por$Treatment, c("SG", "CB", "OY"))
+
 ggplot(Por, aes(Treatment, delta_Por*100)) +
   geom_boxplot() +
   theme_classic() +
@@ -27,7 +29,7 @@ ggplot(Por, aes(Treatment, delta_Por*100)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 18)) +
-  ylab(expression(paste("Delta Porosity (%)")))
+  ylab(expression(paste("Change in Porosity (%)")))
 
 ggplot(Por, aes(Treatment, Por_I*100)) +
   geom_boxplot() +
@@ -41,7 +43,7 @@ ggplot(Por, aes(Treatment, Por_I*100)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 18)) +
-  ylab(expression(paste("Porosity (%)"))) +
+  ylab(expression(paste("Initial Porosity (%)"))) +
   ylim(25,40)
 
 lm.pori <- lm(data = Por, Por_I ~ Treatment + Site)
@@ -57,20 +59,20 @@ plot(simulateResiduals(lm.por)) #Passes
 anova(lm.por)
 ## LOI -------------------------------------------------------------------------
 LOI_I <- read.csv("D:/Projects/Blocks/Data/LOI_Initial.csv") %>%
-  dplyr::select(Site, Block=Treatment, Rep, LOI_mg)
+  dplyr::select(Site, Block, Rep, OM_perc)
 LOI_F <- read.csv("D:/Projects/Blocks/Data/LOI_Final.csv") %>%
-  dplyr::select(Site, Block=Treatment, Rep, LOI_mg)
+  dplyr::select(Site, Block, Rep, OM_perc)
 
-I <- LOI_I %>% group_by(Site, Block) %>% summarise(LOI_I = mean(LOI_mg))
-Fin <- LOI_F %>% group_by(Site, Block) %>% summarise(LOI_F = mean(LOI_mg))
+I <- LOI_I %>% group_by(Site, Block) %>% summarise(LOI_I = mean(OM_perc))
+Fin <- LOI_F %>% group_by(Site, Block) %>% summarise(LOI_F = mean(OM_perc))
 
 LOI <- full_join(I, Fin) %>%
-  mutate(delta_LOI_mg = LOI_F - LOI_I, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
+  mutate(delta_OM = LOI_F - LOI_I, Treatment = case_when(startsWith(Block, "G") == T ~ "SG",
                                                              startsWith(Block, "O") == T ~ "OY",
                                                              startsWith(Block, "C") == T ~ "CB"))
+LOI$Treatment <- factor(LOI$Treatment, c("SG", "CB", "OY"))
 
-
-ggplot(LOI, aes(Treatment, delta_LOI_mg)) +
+ggplot(LOI, aes(Treatment, delta_OM*100)) +
   geom_boxplot() +
   theme_classic() +
   facet_wrap(~Site) +
@@ -83,13 +85,13 @@ ggplot(LOI, aes(Treatment, delta_LOI_mg)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 18)) +
-  ylab(expression(paste("Delta Organic Matter (mg)")))
+  ylab(expression(paste("Change in Organic Matter (%)")))
 
-ggplot(LOI, aes(Treatment, LOI_I)) +
+ggplot(LOI, aes(Treatment, LOI_I*100)) +
   geom_boxplot() +
   theme_classic() +
   facet_wrap(~Site) +
-  ylim(0, 225) +
+  ylim(0,0.8) +
   theme_classic() +
   theme(axis.text = element_text(size = 18),
         axis.title = element_text(size = 20),
@@ -98,10 +100,11 @@ ggplot(LOI, aes(Treatment, LOI_I)) +
         plot.margin = margin(b = 20,
                              l = 20),
         strip.text.x = element_text(size = 18)) +
-  ylab(expression(paste("Sediment Organic Matter (mg)")))
+  ylab(expression(paste("Initial Organic Matter (%)")))
+
 
 #Anova
-lm.loi <- lm(data = LOI, delta_LOI_mg ~ Treatment + Site)
+lm.loi <- lm(data = LOI, delta_OM ~ Treatment + Site)
 
 plot(simulateResiduals(lm.loi)) #Passes - ish (calculate difference?)
 
